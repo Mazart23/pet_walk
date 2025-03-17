@@ -1,0 +1,81 @@
+networks:
+  petwalk_network:
+    driver: bridge
+
+services:
+
+  controller:
+    build:
+      context: ./controller
+      dockerfile: Dockerfile
+    #restart: always
+    container_name: PW-controller
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      - petwalk_network
+    ports:
+      - "5001:5001"
+    env_file:
+      - "./db.env"
+      - "./controller/jwt.env"
+    volumes:
+      - "./apps.yaml:/app/config/apps.yaml"
+      - "./controller/logs:/app/logs"
+
+  notifier:
+    build:
+      context: ./notifier
+      dockerfile: Dockerfile
+    #restart: always
+    container_name: PW-notifier
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      - petwalk_network
+    ports:
+      - "5002:5002"
+    env_file:
+      - "./notifier/jwt.env"
+    volumes:
+      - "./apps.yaml:/app/config/apps.yaml"
+      - "./notifier/logs:/app/logs"
+
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    container_name: PW-postgres
+    networks:
+      - petwalk_network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: petwalk
+      POSTGRES_PASSWORD: petwalk_password
+      POSTGRES_DB: petwalk_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: PW-client
+    networks:
+      - petwalk_network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - controller
+      - notifier
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001"]
+      interval: 5s
+      retries: 10
+    logging:
+      #limit logs to 300MB (3 rotations of 100M each)
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

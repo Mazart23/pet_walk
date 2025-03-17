@@ -1,0 +1,18 @@
+services:
+  client:
+    http: "http"
+    ip_host: "localhost"
+    ip: "client"
+    port: 3000
+
+  controller:
+    http: "http"
+    ip_host: "localhost"
+    ip: "controller"
+    port: 5001
+
+  notifier:
+    http: "http"
+    ip_host: "localhost"
+    ip: "notifier"
+    port: 5002

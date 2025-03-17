@@ -57,6 +57,7 @@ cover/
 
 # Django stuff:
 *.log
+logs
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -128,7 +129,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/
@@ -172,3 +173,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# node dirs
+node_modules/
+.next/
