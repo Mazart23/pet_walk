@@ -79,3 +79,6 @@ services:
       options:
         max-size: "100m"
         max-file: "3"
+
+volumes:
+  postgres_data:

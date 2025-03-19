@@ -5,12 +5,10 @@ from datetime import datetime
 from flask import request
 from flask_restx import Resource, fields, Namespace
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson.objectid import ObjectId
 
 from ..database.queries import Queries as db
 from ..utils.request import send_request
 from ..utils.apps import Services
-from ..utils.apps import Url
 
 
 log = logging.getLogger('POST')
@@ -122,30 +120,9 @@ class Post(Resource):
             if not user:
                 return {"message": "User not found"}, 404
 
-            # Upload files to Imgur
-            image_urls = []
-            if files:
-                headers = {"Authorization": f"Client-ID {os.environ.get('IMGUR_CLIENT_ID')}"}
-
-                for file in files:
-                    try:
-                        response = send_request('POST', Url.IMGUR, files={'image': file}, headers=headers)
-
-                        if response.status_code != 200:
-                            log.error(f"Failed to upload image to Imgur: {response}")
-                            return {"message": "Failed to upload one or more images to Imgur."}, 500
-
-                        imgur_data = response.json()
-                        image_urls.append(imgur_data['data']['link'])
-
-                    except Exception as e:
-                        log.error(f"Exception during file upload to Imgur: {e}")
-                        return {"message": "Failed to upload images to Imgur."}, 500
-
             # Prepare post data
             post_data = {
                 "description": content,   
-                "images_urls": image_urls,
                 "comments": [],
                 "timestamp": datetime.utcnow(),
                 "location": location,
@@ -162,7 +139,6 @@ class Post(Resource):
             return {
                 "id": str(post_id),
                 "content": content,
-                "images": image_urls,
                 "user": {
                     "id": user_id,
                     "username": user.get("username"),

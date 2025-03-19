@@ -26,16 +26,4 @@ class Service:
 class Services:
     CLIENT = Service.load('client')
     CONTROLLER = Service.load('controller')
-    REDIRECTER = Service.load('redirecter')
     NOTIFIER = Service.load('notifier')
-    
-
-class Url:
-    
-    @classmethod
-    def load_external_url(service: str) -> str:
-        with open('/app/config/apps.yaml', 'r') as file:
-            url = yaml.safe_load(file)['external'][service]['url']
-        return url
-
-    IMGUR = load_external_url.__func__('imgur')
