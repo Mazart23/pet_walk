@@ -55,7 +55,7 @@ services:
       POSTGRES_PASSWORD: petwalk_password
       POSTGRES_DB: petwalk_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./postgres/data:/var/lib/postgresql/data
 
   client:
     build:
@@ -82,3 +82,4 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
