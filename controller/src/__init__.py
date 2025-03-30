@@ -24,7 +24,7 @@ api = Api(blueprint, version = '1.0.0', title = 'PetWalk Controller API')
 
 from .endpoints.user import api as user
 from .endpoints.config import api as config
-from .endpoints.post import api as post
+from .endpoints.route import api as post
 
 
 api.add_namespace(user)
