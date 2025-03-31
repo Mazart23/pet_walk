@@ -8,15 +8,222 @@ log = logging.getLogger('QUERIES')
 
 class Queries(PostgresConnect):
 
-    def get_example_data(self):
-        query = '''
-            SELECT *
-            FROM spatial_ref_sys
-            LIMIT 5;
-        '''
-        result = self.execute_query(query)
-        return result
+    def get_user_by_id(self, user_id: int) -> dict:
+        """
+        Retrieve a user by their ID.
+        """
+        query = """
+            SELECT
+            id, email, password, name, avatar_url,
+            is_verified, date_joined, last_login
+            FROM users
+            WHERE id = %s
+        """
+        rows = self.execute_query(query, (user_id,))
+        if rows:
+            return rows[0]
+        return {}
+
+    def get_user_by_username(self, username: str) -> dict:
+        """
+        Retrieve a user by their username.
+        """
+        query = """
+            SELECT
+            id, email, password, name, avatar_url,
+            is_verified, date_joined, last_login
+            FROM users
+            WHERE name = %s
+        """
+        rows = self.execute_query(query, (username,))
+        if rows:
+            return rows[0]
+        return {}
+
+    def update_user_by_id(self, user_id: int, updates: dict) -> bool:
+        """
+        Update a user's information by their ID.
+        """
+        if not updates:
+            return False
+
+        set_clauses = []
+        params = []
+        for col, val in updates.items():
+            set_clauses.append(f"{col} = %s")
+            params.append(val)
+
+        set_sql = ", ".join(set_clauses)
+        params.append(user_id)
+
+        query = f"UPDATE users SET {set_sql} WHERE id = %s"
+        result = self.execute_query(query, tuple(params))
+        return bool(result)
+
+    def get_user_password_by_username(self, username: str) -> dict:
+        """
+        Retrieve a user's password by their username.
+        """
+        query = """
+            SELECT
+            id,
+            password
+            FROM users
+            WHERE name = %s
+        """
+        rows = self.execute_query(query, (username,))
+        if rows:
+            return rows[0]
+        return {}
+
+    def get_user_by_email(self, email: str) -> dict:
+        """
+        Retrieve a user by their email address.
+        """
+        query = """
+            SELECT
+            id, email, password, name, avatar_url,
+            is_verified, date_joined, last_login
+            FROM users
+            WHERE email = %s
+        """
+        rows = self.execute_query(query, (email,))
+        if rows:
+            return rows[0]
+        return {}
+
+    def user_change_password(self, user_id: int, new_password: str) -> bool:
+        """
+        Change a user's password.
+        """
+        query = """
+            UPDATE users
+            SET password = %s
+            WHERE id = %s
+        """
+        result = self.execute_query(query, (new_password, user_id))
+        return bool(result)
+
+    def create_user(self, username: str, email: str, hashed_password: str) -> int:
+        """
+        Create a new user account.
+        """
+        query = """
+            INSERT INTO users (name, email, password, avatar_url, is_verified, date_joined, last_login)
+            VALUES (%s, %s, %s, '', FALSE, CURRENT_TIMESTAMP, NULL)
+            RETURNING id
+        """
+        rows = self.execute_query(query, (username, email, hashed_password))
+        if rows:
+            return rows[0]['id']
+        return 0
+
+    def update_user_picture(self, user_id: int, new_picture_url: str) -> bool:
+        """
+        Update a user's profile picture.
+        """
+        try:
+            query = """
+                UPDATE users
+                SET avatar_url = %s
+                WHERE id = %s
+            """
+            result = self.execute_query(query, (new_picture_url, user_id))
+            
+            if not result:
+                log.info(f"Profile picture not updated for user {user_id}")
+                return False
+
+            return True
+        
+        except Exception as e:
+            log.error(f"Error updating profile picture for user {user_id}: {e}")
+            return False
     
+    def get_route_by_id(self, route_id: int) -> dict:
+        """
+        Retrieve a route by its ID.
+        """
+        query = """
+            SELECT
+                id,
+                user_id,
+                declared_distance,
+                real_distance,
+                is_avoid_green,
+                is_prefer_green,
+                is_include_weather,
+                ST_AsText(route) AS route
+            FROM routes
+            WHERE id = %s
+        """
+        rows = self.execute_query(query, (route_id,))
+        if rows:
+            return rows[0]
+        return {}
+
+    def get_routes_by_user_id(self, user_id: int) -> list:
+        """
+        Retrieve all routes associated with a specific user.
+        """
+        query = """
+            SELECT
+                id,
+                user_id,
+                declared_distance,
+                real_distance,
+                is_avoid_green,
+                is_prefer_green,
+                is_include_weather,
+                ST_AsText(route) AS route
+            FROM routes
+            WHERE user_id = %s
+        """
+        return self.execute_query(query, (user_id,))
+
+    def create_route(self,
+        user_id: int,
+        declared_distance: int,
+        real_distance: int,
+        is_avoid_green: bool,
+        is_prefer_green: bool,
+        is_include_weather: bool,
+        wkt_line: str
+    ) -> int:
+        """
+        Create a new route using ST_GeomFromText to insert geometry.
+        """
+        query = """
+            INSERT INTO routes (
+                user_id,
+                declared_distance,
+                real_distance,
+                is_avoid_green,
+                is_prefer_green,
+                is_include_weather,
+                route
+            )
+            VALUES (
+                %s, %s, %s, %s, %s, %s,
+                ST_GeomFromText(%s, 4326)
+            )
+            RETURNING id
+        """
+        rows = self.execute_query(
+            query,
+            (
+                user_id,
+                declared_distance,
+                real_distance,
+                is_avoid_green,
+                is_prefer_green,
+                is_include_weather,
+                wkt_line
+            )
+        )
+        if rows:
+            return rows[0]['id']
+        return 0
 
 # class Queries(MongoDBConnect):
 
