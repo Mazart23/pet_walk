@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS routes (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id),
     declared_distance INT,           
-  real_distance INT,               
+    real_distance INT,               
     is_avoid_green BOOLEAN,          
     is_prefer_green BOOLEAN,         
     is_include_weather BOOLEAN,      
