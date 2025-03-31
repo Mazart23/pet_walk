@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import ScrollUp from "@/components/Common/ScrollUp";
 
 export const metadata: Metadata = {
   title: "PetWalk",
@@ -9,6 +10,9 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
+      <ScrollUp />
+      <div className="flex min-h-[100vh]">
+      </div>
     </>
   );
 }
