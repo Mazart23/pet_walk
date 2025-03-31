@@ -104,16 +104,16 @@ class Queries(PostgresConnect):
         result = self.execute_query(query, (new_password, user_id))
         return bool(result)
 
-    def create_user(self, username: str, email: str, hashed_password: str) -> int:
+    def create_user(self, username: str, email: str, hashed_password: str, phone: str) -> int:
         """
         Create a new user account.
         """
         query = """
-            INSERT INTO users (name, email, password, avatar_url, is_verified, date_joined, last_login)
-            VALUES (%s, %s, %s, '', FALSE, CURRENT_TIMESTAMP, NULL)
+            INSERT INTO users (name, email, password, phone, avatar_url, is_verified, date_joined, last_login)
+            VALUES (%s, %s, %s, %s, '', FALSE, CURRENT_TIMESTAMP, NULL)
             RETURNING id
         """
-        rows = self.execute_query(query, (username, email, hashed_password))
+        rows = self.execute_query(query, (username, email, hashed_password, phone))
         if rows:
             return rows[0]['id']
         return 0
