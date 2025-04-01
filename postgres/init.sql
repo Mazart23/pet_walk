@@ -3,8 +3,8 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    name VARCHAR(100),
+    hashed_password VARCHAR(255) NOT NULL,
+    username VARCHAR(100),
     phone VARCHAR(15),
     avatar_url TEXT,
     is_verified BOOLEAN DEFAULT FALSE,

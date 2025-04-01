@@ -14,7 +14,7 @@ class Queries(PostgresConnect):
         """
         query = """
             SELECT
-            id, email, password, name, avatar_url,
+            id, email, password, username, avatar_url,
             is_verified, date_joined, last_login
             FROM users
             WHERE id = %s
@@ -30,10 +30,10 @@ class Queries(PostgresConnect):
         """
         query = """
             SELECT
-            id, email, password, name, avatar_url,
+            id, email, password, username, avatar_url,
             is_verified, date_joined, last_login
             FROM users
-            WHERE name = %s
+            WHERE username = %s
         """
         rows = self.execute_query(query, (username,))
         if rows:
@@ -65,16 +65,17 @@ class Queries(PostgresConnect):
         Retrieve a user's password by their username.
         """
         query = """
-            SELECT
-            id,
-            password
+            SELECT 
+                id, 
+                password
             FROM users
-            WHERE name = %s
+            WHERE username = %s
         """
         rows = self.execute_query(query, (username,))
+        cols = ['id', 'password']
         if rows:
-            return rows[0]
-        return {}
+            return {col: data for col, data in zip(cols, rows[0])}
+        return rows
 
     def get_user_by_email(self, email: str) -> dict:
         """
@@ -82,14 +83,21 @@ class Queries(PostgresConnect):
         """
         query = """
             SELECT
-            id, email, password, name, avatar_url,
-            is_verified, date_joined, last_login
+                id, 
+                email, 
+                password, 
+                username, 
+                avatar_url,
+                is_verified, 
+                date_joined, 
+                last_login
             FROM users
             WHERE email = %s
         """
+        cols = ['id', 'email', 'password', 'username', 'avatar_url', 'is_verified', 'date_joined', 'last_login']
         rows = self.execute_query(query, (email,))
         if rows:
-            return rows[0]
+            return {col: data for col, data in zip(cols, rows[0])}
         return {}
 
     def user_change_password(self, user_id: int, new_password: str) -> bool:
@@ -104,19 +112,18 @@ class Queries(PostgresConnect):
         result = self.execute_query(query, (new_password, user_id))
         return bool(result)
 
-    def create_user(self, username: str, email: str, hashed_password: str, phone: str) -> int:
+    def create_user(self, username: str, email: str, hashed_password: str, phone: str) -> int | None:
         """
         Create a new user account.
         """
         query = """
-            INSERT INTO users (name, email, password, phone, avatar_url, is_verified, date_joined, last_login)
+            INSERT INTO users (username, email, password, phone, avatar_url, is_verified, date_joined, last_login)
             VALUES (%s, %s, %s, %s, '', FALSE, CURRENT_TIMESTAMP, NULL)
             RETURNING id
         """
         rows = self.execute_query(query, (username, email, hashed_password, phone))
         if rows:
-            return rows[0]['id']
-        return 0
+            return rows[0][0]
 
     def update_user_picture(self, user_id: int, new_picture_url: str) -> bool:
         """
@@ -157,9 +164,10 @@ class Queries(PostgresConnect):
             FROM routes
             WHERE id = %s
         """
+        cols = ['id', 'user_id', 'declared_distance', 'real_distance', 'is_avoid_green', 'is_prefer_green', 'is_include_weather', 'route']
         rows = self.execute_query(query, (route_id,))
         if rows:
-            return rows[0]
+            return {col: data for col, data in zip(cols, rows[0])}
         return {}
 
     def get_routes_by_user_id(self, user_id: int) -> list:
@@ -179,7 +187,11 @@ class Queries(PostgresConnect):
             FROM routes
             WHERE user_id = %s
         """
-        return self.execute_query(query, (user_id,))
+        cols = ['id', 'user_id', 'declared_distance', 'real_distance', 'is_avoid_green', 'is_prefer_green', 'is_include_weather', 'route']
+        rows = self.execute_query(query, (user_id,))
+        if rows:
+            return {col: data for col, data in zip(cols, rows[0])}
+        return {}
 
     def create_route(self,
         user_id: int,
@@ -222,8 +234,7 @@ class Queries(PostgresConnect):
             )
         )
         if rows:
-            return rows[0]['id']
-        return 0
+            return rows[0][0]
 
 # class Queries(MongoDBConnect):
 
