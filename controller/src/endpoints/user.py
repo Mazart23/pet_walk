@@ -169,10 +169,10 @@ class Login(Resource):
 
         user = queries.get_user_password_by_username(username)
         
-        if not user or not bcrypt.checkpw(password.encode('utf-8'), user['hashed_password']):
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password']):
             api.abort(401, 'Unauthorized')
         
-        access_token = create_access_token(identity=str(user['_id']))
+        access_token = create_access_token(identity=str(user['id']))
         return {'access_token': access_token}, 200
     
 @api.route('/signup')
@@ -217,28 +217,29 @@ class Password(Resource):
     @api.response(401, 'Unauthorized')
     @api.response(404, 'User not found')
     @api.response(500, 'Internal Server Error')
+    @jwt_required()
     def patch(self):
+        user_id = get_jwt_identity()
         data = request.get_json()
         
-        username = data.get('username')
         current_password = data.get('current_password')
         password = data.get('new_password')
         
         queries = db()
         
-        user = queries.get_user_password_by_username(username)
+        user = queries.get_user_by_id(user_id)
         
         if not user:
             api.abort(404, 'User not found')
             
-        if not bcrypt.checkpw(current_password.encode('utf-8'), user['hashed_password']):
+        if not bcrypt.checkpw(current_password.encode('utf-8'), user['password']):
             api.abort(401, 'Unauthorized')
         
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         
         queries = db()
         
-        result = queries.user_change_password(user['_id'], hashed_password)
+        result = queries.user_change_password(user_id, hashed_password)
         
         if not result:
             api.abort(500, 'Internal Server Error')
