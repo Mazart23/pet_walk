@@ -119,8 +119,8 @@ const Header = () => {
                               href={menuItem.path}
                               className={`flex py-2 text-base lg:mr-0 lg:inline-flex lg:px-0 lg:py-6 ${
                                 usePathName === menuItem.path
-                                  ? "text-green-500 dark:text-white"
-                                  : "text-dark hover:text-green-500 dark:text-white/70 dark:hover:text-white"
+                                  ? "text-sky-500 dark:text-white"
+                                  : "text-dark hover:text-sky-500 dark:text-white/70 dark:hover:text-white"
                               }`}
                             >
                               {menuItem.title}
@@ -129,7 +129,7 @@ const Header = () => {
                             <>
                               <p
                                 onClick={() => handleSubmenu(index)}
-                                className="flex cursor-pointer items-center justify-between py-2 text-base text-dark group-hover:text-green-500 dark:text-white/70 dark:group-hover:text-white lg:mr-0 lg:inline-flex lg:px-0 lg:py-6"
+                                className="flex cursor-pointer items-center justify-between py-2 text-base text-dark group-hover:text-sky-500 dark:text-white/70 dark:group-hover:text-white lg:mr-0 lg:inline-flex lg:px-0 lg:py-6"
                               >
                                 {menuItem.title}
                                 <span className="pl-3">
@@ -152,7 +152,7 @@ const Header = () => {
                                   <Link
                                     href={submenuItem.path}
                                     key={index}
-                                    className="block rounded py-2.5 text-sm text-dark hover:text-green-500 dark:text-white/70 dark:hover:text-white lg:px-3"
+                                    className="block rounded py-2.5 text-sm text-dark hover:text-sky-500 dark:text-white/70 dark:hover:text-white lg:px-3"
                                   >
                                     {submenuItem.title}
                                   </Link>
@@ -182,7 +182,7 @@ const Header = () => {
                       Logout
                     </Link>
                     <div className={`h-12 w-12 relative ${userSelf?.profile_picture_url !== undefined ? "animate__animated animate__fadeInTop" : ""}`}>
-                    {userSelf?.profile_picture_url !== undefined && 
+                    {userSelf && userSelf?.profile_picture_url !== undefined && 
                       <Link href={`/profile/${userSelf?.username}`}>
                           { userSelf?.profile_picture_url === "" ? (
                             <SiDatadog 
@@ -213,7 +213,7 @@ const Header = () => {
                     </Link>
                     <Link
                       href="/signup"
-                      className="ease-in-up shadow-btn hover:shadow-btn-hover hidden rounded-sm bg-green-500 px-8 py-3 text-base font-medium text-white transition duration-300 hover:bg-green-600 md:block md:px-9 lg:px-6 xl:px-9"
+                      className="ease-in-up shadow-btn hover:shadow-btn-hover hidden rounded-sm bg-sky-500 px-8 py-3 text-base font-medium text-white transition duration-300 hover:bg-sky-600 md:block md:px-9 lg:px-6 xl:px-9"
                     >
                       Sign Up
                     </Link>

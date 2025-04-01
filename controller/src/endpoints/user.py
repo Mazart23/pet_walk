@@ -31,7 +31,6 @@ user_model = api.model(
         'bio': fields.String(description="Bio of the user", example="bio"),
         'email': fields.String(description="Email address of the user", example="kasia@gmail.com"),
         'profile_picture_url': fields.String(description="Profile picture URL", example="https://i.imgur.com/9P3c7an.jpeg"),
-        'scans': fields.List(fields.String, description="List of user scans IDs", example=["6741f6491a7d7e60b197e7b7"]),
         'posts': fields.List(fields.String, description="List of user posts IDs", example=["67524226995227baafe49eed"]),
         'location': fields.String(description="User location (city)", example="Krakow"),
         'is_premium': fields.Boolean(description="Whether user has premium status", example=True),
@@ -168,11 +167,11 @@ class Login(Resource):
         queries = db()
 
         user = queries.get_user_password_by_username(username)
-        
-        if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password']):
+        print(user)
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.get('password').encode('utf-8')):
             api.abort(401, 'Unauthorized')
         
-        access_token = create_access_token(identity=str(user['id']))
+        access_token = create_access_token(identity=str(user.get('id')))
         return {'access_token': access_token}, 200
     
 @api.route('/signup')
@@ -198,8 +197,11 @@ class Signup(Resource):
             if queries.get_user_by_email(email):
                 raise BadRequest('Email already exists')
 
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             user_id = queries.create_user(username, email, hashed_password, phone)
+
+            if user_id is None:
+                raise Exception('User not created - empty user_id')
 
             return {'message': 'User created successfully', 'user_id': str(user_id)}, 200
 
@@ -232,7 +234,7 @@ class Password(Resource):
         if not user:
             api.abort(404, 'User not found')
             
-        if not bcrypt.checkpw(current_password.encode('utf-8'), user['password']):
+        if not bcrypt.checkpw(current_password.encode('utf-8'), user['password'].encode('utf-8')):
             api.abort(401, 'Unauthorized')
         
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())

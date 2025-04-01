@@ -31,7 +31,7 @@ const Footer = () => {
                 </p>
                 <div className="flex items-center">
                 <a
-                  href="https://github.com/Mazart23/pet_book"
+                  href="https://github.com/Mazart23/pet_walk"
                   aria-label="github-link"
                   target="_blank"
                   rel="noopener noreferrer"

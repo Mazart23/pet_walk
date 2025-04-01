@@ -78,7 +78,7 @@ const LoginForm = () => {
                 <div className="mb-6">
                   <button
                     type="submit"
-                    className="flex w-full items-center justify-center rounded-sm bg-green-500 px-9 py-4 text-base font-medium text-white shadow-submit duration-300 hover:bg-green-600 dark:shadow-submit-dark"
+                    className="flex w-full items-center justify-center rounded-sm bg-sky-500 px-9 py-4 text-base font-medium text-white shadow-submit duration-300 hover:bg-sky-600 dark:shadow-submit-dark"
                   >
                     Sign in
                   </button>

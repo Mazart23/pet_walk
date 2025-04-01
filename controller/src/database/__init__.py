@@ -26,14 +26,14 @@ class PostgresConnect:
                 password=self.password,
                 database=self.database
             )
-            print("Connected to the database!")
+            log.info("Connected to the database")
         except psycopg2.Error as e:
-            print(f"Error connecting to the database: {e}")
+            log.info(f"Error connecting to the database: {e}")
 
     def disconnect(self):
         if self.connection:
             self.connection.close()
-            print("Disconnected from the database.")
+            log.info("Disconnected from the database.")
 
     def execute_query(self, query, params=None):
         if not self.connection:
@@ -47,5 +47,5 @@ class PostgresConnect:
             self.connection.commit()
             return cursor.fetchall()
         except psycopg2.Error as e:
-            print(f"Error executing query: {e}")
+            log.info(f"Error executing query: {e}")
             return None
