@@ -12,7 +12,6 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       Cookies.remove("token");
-      window.location.href = "/about";
     }
     return Promise.reject(error);
   }
