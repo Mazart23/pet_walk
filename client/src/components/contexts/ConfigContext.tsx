@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { setServices, getConfig } from "/client/src/utils/loadServices";
+import { setServices, getConfig } from "../../utils/loadServices";
 
 const ConfigContext = createContext(null);
 
