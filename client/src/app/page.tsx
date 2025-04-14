@@ -5,25 +5,26 @@ import RouteConfig from "@/components/RouteConfig/RouteConfig";
 export const metadata: Metadata = {
   title: "PetWalk",
   description: "This is an app for pet lovers!",
-  // other metadata
 };
 
 export default function Home() {
   return (
     <>
-     <ScrollUp />
-     <div className="flex min-h-[100vh] mt-[200px] px-6">
-     {/* Lewa kolumna */}
-     <div className="w-full md:w-1/3 flex flex-col items-start mt-[200px] gap-4">
-     <RouteConfig />
-     </div>
+      <ScrollUp />
+      <section className="min-h-[60vh] flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-4"> </h1>
 
-        {/* Prawa część (możesz dodać np. mapę, trasy itp.) */}
-        <div className="w-full md:w-2/3 p-6">
-          {/* Pozostała zawartość */}
-      </div>
-      </div>
+          <p className="text-lg opacity-0">costam</p>
+          <p className="text-lg opacity-0">costam</p>
+          <p className="text-lg opacity-0">costam</p>
 
+        </div>
+      </section>
+      <section className="bg-gray-900 py-10 px-6">
+        <RouteConfig />
+      </section>
     </>
   );
 }
+
