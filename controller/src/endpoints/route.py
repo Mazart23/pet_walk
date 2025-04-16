@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from flask import request
 from flask_restx import Resource, fields, Namespace
@@ -15,15 +14,22 @@ log = logging.getLogger('ROUTE')
 
 api = Namespace('route')
 
+point_model = api.model('Point', {
+    'latitude': fields.Float(description="Latitude coordinate"),
+    'longitude': fields.Float(description="Longitude coordinate")
+})
+
 declared_parameters_model = api.model('DeclaredPameters', {
+    'point': fields.Nested(point_model, description="Starting point coordinates"),
     'declared_distance': fields.Integer(description="Declared distance of the route in meters", example=1000),
     'is_prefer_green': fields.Boolean(description="Whether user prefers green areas", example=False),
     'is_avoid_green': fields.Boolean(description="Whether user would like to avoid green areas", example=False),
-    'is_include_wheather': fields.Boolean(description="Whether route should be fitted to current wheather", example=False),
+    'is_include_weather': fields.Boolean(description="Whether route should be fitted to current wheather", example=False),
 })
 
 route_model = api.model('Route', {
     'id': fields.String(description="Unique ID of the route", example="6752269f6f218f859668c4ba"),
+    'route': fields.List(fields.List(fields.Float), description="List of coordinates forming the route"),
     'declared_parameters': fields.Nested(declared_parameters_model),
     'real_distance': fields.Integer(description="Real calculated distance of the route in meters", example=1000),
     'timestamp': fields.String(description="Timestamp of the route generation", example="2024-12-05 21:18:07"),
@@ -72,9 +78,15 @@ class Route(Resource):
         declared_distance = json.get('declared_distance')
         is_prefer_green = json.get('is_prefer_green')
         is_avoid_green = json.get('is_avoid_green')
-        is_include_wheather = json.get('is_include_wheather')
+        is_include_weather = json.get('is_include_weather')
 
-        route, real_distance = algorithm((latitude, longitude), declared_distance, is_prefer_green, is_avoid_green, is_include_wheather)
+        route, real_distance = algorithm(
+            (latitude, longitude), 
+            declared_distance, 
+            is_prefer_green, 
+            is_avoid_green, 
+            is_include_weather
+        )
 
         if not route:
             api.abort(500)
@@ -85,7 +97,7 @@ class Route(Resource):
             "declared_distance": declared_distance,
             "is_prefer_green": is_prefer_green,
             "is_avoid_green": is_avoid_green,
-            "is_include_wheather": is_include_wheather,
+            "is_include_weather": is_include_weather,
             "user_id": user_id
         }
 
@@ -105,7 +117,7 @@ class Route(Resource):
                 "declared_distance": declared_distance,
                 "is_prefer_green": is_prefer_green,
                 "is_avoid_green": is_avoid_green,
-                "is_include_wheather": is_include_wheather,
+                "is_include_weather": is_include_weather,
             },
             "timestamp": timestamp
         }
