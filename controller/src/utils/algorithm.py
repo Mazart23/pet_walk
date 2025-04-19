@@ -49,6 +49,7 @@ def select_non_adjacent_nodes(path_segment, count):
     return selected
 
 def load_graph():
+    log.info('Graph loading started')
     global G, _event_graph_loaded
     if not os.path.exists(GRAPH_FILEPATH):
         G = download_and_save_graph()
