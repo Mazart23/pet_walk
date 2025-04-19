@@ -11,10 +11,18 @@ import { WebsocketProvider } from "../components/contexts/WebsocketContext";
 import { UserProvider } from "@/components/contexts/UserContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Inter } from "next/font/google";
+import L from 'leaflet';
 import "node_modules/react-modal-video/css/modal-video.css";
 import "../styles/index.css";
 import 'leaflet/dist/leaflet.css';
 
+// Leaflet Icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+});
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -1,31 +1,47 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Ikona Leafleta
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-});
+import useToken from '../contexts/TokenContext';
+import { generateRoute } from '@/app/Api';
 
 export default function RouteConfig() {
+  const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
   const [distance, setDistance] = useState(2);
-  const [park, setPark] = useState(true);
-  const [sidewalk, setSidewalk] = useState(false);
+  const [isAvoidGreen, setIsAvoidGreen] = useState(false);
+  const [isPreferGreen, setIsPreferGreen] = useState(false);
+  const [isIncludeWeather, setIsIncludeWeather] = useState(false);
   const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]); // Kraków
 
   const [routeName, setRouteName] = useState('');
   const [favoriteRoutes, setFavoriteRoutes] = useState<
-    { name: string; distance: number; park: boolean; sidewalk: boolean; position: [number, number] }[]
+    { name: string; distance: number; isAvoidGreen: boolean; isPreferGreen: boolean; position: [number, number] }[]
   >([]);
 
-  const handleSubmit = () => {
-    console.log({ distance, park, sidewalk, startPosition });
+  const token = useToken();
+
+  useEffect(() => {
+    if (isErrorDisplayed) {
+      setTimeout(() => {
+        setIsErrorDisplayed(value => !value)
+      }, 5000);
+    }
+  }, [isErrorDisplayed, setIsErrorDisplayed])
+
+  const handleGenerateRoute = () => {
+    console.log({ distance, isAvoidGreen, isPreferGreen, startPosition });
+    generateRoute(
+      token,
+      startPosition[0],
+      startPosition[1],
+      distance * 1000,
+      isPreferGreen,
+      isAvoidGreen,
+      isIncludeWeather).then((response) => {
+        if (response === false) {
+          setIsErrorDisplayed(true);
+        }
+      });
   };
 
   const handleSave = () => {
@@ -34,8 +50,8 @@ export default function RouteConfig() {
     const newRoute = {
       name: routeName,
       distance,
-      park,
-      sidewalk,
+      isAvoidGreen,
+      isPreferGreen,
       position: startPosition,
     };
 
@@ -55,7 +71,7 @@ export default function RouteConfig() {
 
   return (
     <div className="flex flex-col md:flex-row gap-6 p-4 w-full max-w-[1400px] mx-auto">
-      {/* Panel konfiguracji */}
+      {/* Configuration panel */}
       <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-xl shadow-md p-6 w-full md:w-1/3">
         <h2 className="text-xl font-bold mb-4">Dostosuj trasę spaceru</h2>
 
@@ -71,23 +87,31 @@ export default function RouteConfig() {
         />
 
         <label className="block mb-2">
-          <input type="checkbox" checked={park} onChange={() => setPark(!park)} />
+          <input type="checkbox" checked={isPreferGreen} onChange={() => setIsPreferGreen(!isPreferGreen)} />
           <span className="ml-2">Preferuję parki</span>
         </label>
 
         <label className="block mb-4">
-          <input type="checkbox" checked={sidewalk} onChange={() => setSidewalk(!sidewalk)} />
+          <input type="checkbox" checked={isAvoidGreen} onChange={() => setIsAvoidGreen(!isAvoidGreen)} />
           <span className="ml-2">Preferuję chodniki</span>
         </label>
 
         <button
-          onClick={handleSubmit}
+          onClick={handleGenerateRoute}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Pokaż trasę
         </button>
 
-        {/* Zapisz trasę */}
+        <div>
+          {!!isErrorDisplayed &&
+            <p>
+              Service with routes is temporary unavailable. Please try again later.
+            </p>
+          }
+        </div>
+
+        {/* Save route */}
         <div className="mt-6">
           <input
             type="text"
@@ -103,7 +127,7 @@ export default function RouteConfig() {
             Zapisz trasę
           </button>
 
-          {/* Lista ulubionych tras */}
+          {/* Favourite routes list */}
           {favoriteRoutes.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Ulubione trasy</h3>
@@ -119,7 +143,7 @@ export default function RouteConfig() {
         </div>
       </div>
 
-      {/* Mapa */}
+      {/* Map */}
       <div className="w-full md:w-2/3 h-[500px] rounded-xl overflow-hidden shadow-md">
         <MapContainer center={startPosition as LatLngExpression} zoom={13} className="w-full h-full">
           <TileLayer

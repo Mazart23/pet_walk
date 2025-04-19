@@ -20,6 +20,7 @@ services:
       - "./db.env"
       - "./controller/jwt.env"
     volumes:
+      - "./graph:/app/graph"
       - "./apps.yaml:/app/config/apps.yaml"
       - "./controller/logs:/app/logs"
 

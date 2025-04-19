@@ -87,19 +87,31 @@ export async function getPost(token, postId) {
     });
 }
 
-export async function createPost(token, formData: FormData) {
+export async function generateRoute(
+  token,
+  latitude,
+  longitude,
+  declared_distance,
+  is_prefer_green,
+  is_avoid_green,
+  is_include_weather
+) {
   await servicesWait();
 
   return apiClient
-    .put(`${services.controller.url}/post/`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+    .post(`${services.controller.url}/route/`, 
+      {
+        point: {latitude, longitude},
+        declared_distance,
+        is_prefer_green,
+        is_avoid_green,
+        is_include_weather
       },
-    })
-    .then((response) => response.data)
-    .catch((error) => {
-      console.error("Error creating post:", error.response?.data || error.message);
-      throw error;
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      }
+    )
+    .then((response) => response.data);
 }
