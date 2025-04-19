@@ -55,7 +55,7 @@ def load_graph():
         G = download_and_save_graph()
     else:
         try:
-            G = ox.project_graph(ox.load_graphml(GRAPH_FILEPATH))
+            G = ox.load_graphml(GRAPH_FILEPATH)
         except Exception as e:
             log.exception(f'Exception during graph loading: {e}')
             G = download_and_save_graph()
@@ -64,7 +64,7 @@ def load_graph():
 
 def download_and_save_graph():
     city = "Kraków, Polska"
-    G = ox.project_graph(ox.graph_from_place(city, network_type="walk", simplify=True))
+    G = ox.graph_from_place(city, network_type="walk", simplify=True)
     ox.save_graphml(G, filepath=GRAPH_FILEPATH)
     return G
 
