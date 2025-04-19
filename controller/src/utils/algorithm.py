@@ -49,15 +49,16 @@ def select_non_adjacent_nodes(path_segment, count):
     return selected
 
 def load_graph():
-    global G
+    global G, _event_graph_loaded
     if not os.path.exists(GRAPH_FILEPATH):
         G = download_and_save_graph()
-        return
-    try:
-        G = ox.project_graph(ox.load_graphml(GRAPH_FILEPATH))
-    except Exception as e:
-        log.exception(f'Exception during graph loading: {e}')
-        G = download_and_save_graph()
+    else:
+        try:
+            G = ox.project_graph(ox.load_graphml(GRAPH_FILEPATH))
+        except Exception as e:
+            log.exception(f'Exception during graph loading: {e}')
+            G = download_and_save_graph()
+    log.info('Graph loaded')
     _event_graph_loaded.set()
 
 def download_and_save_graph():
