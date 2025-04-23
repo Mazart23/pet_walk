@@ -15,30 +15,26 @@ L.Icon.Default.mergeOptions({
 
 export default function RouteConfig() {
   const [distance, setDistance] = useState(2);
-  const [park, setPark] = useState(true);
-  const [sidewalk, setSidewalk] = useState(false);
-  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]); // Kraków
+  const [preference, setPreference] = useState("default");
+  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]);
 
   const [routeName, setRouteName] = useState('');
   const [favoriteRoutes, setFavoriteRoutes] = useState<
-    { name: string; distance: number; park: boolean; sidewalk: boolean; position: [number, number] }[]
+    { name: string; distance: number; preference: string; position: [number, number] }[]
   >([]);
 
   const handleSubmit = () => {
-    console.log({ distance, park, sidewalk, startPosition });
+    console.log({ distance, preference, startPosition });
   };
 
   const handleSave = () => {
     if (routeName.trim() === '') return;
-
     const newRoute = {
       name: routeName,
       distance,
-      park,
-      sidewalk,
+      preference,
       position: startPosition,
     };
-
     setFavoriteRoutes((prev) => [...prev, newRoute]);
     setRouteName('');
   };
@@ -49,68 +45,80 @@ export default function RouteConfig() {
         setStartPosition([e.latlng.lat, e.latlng.lng]);
       },
     });
-
     return <Marker position={startPosition as LatLngExpression} />;
   }
 
   return (
     <div className="flex flex-col md:flex-row gap-6 p-4 w-full max-w-[1400px] mx-auto">
-      {/* Panel konfiguracji */}
+      {/* Configuration Panel */}
       <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-xl shadow-md p-6 w-full md:w-1/3">
-        <h2 className="text-xl font-bold mb-4">Dostosuj trasę spaceru</h2>
+        <h2 className="text-xl font-bold mb-4">Customize your walk route</h2>
 
-        <label className="block mb-2">Długość trasy: {distance} km</label>
-        <input
-          type="range"
-          min="0.5"
-          max="5"
-          step="0.5"
+        {/* Distance */}
+        <label className="block mb-2">Distance: {distance} km</label>
+        <select
           value={distance}
           onChange={(e) => setDistance(parseFloat(e.target.value))}
-          className="w-full mb-4"
-        />
+          className="w-full mb-4 p-2 rounded border dark:bg-gray-700"
+        >
+          {[...Array(10)].map((_, i) => {
+            const val = (i + 1) * 0.5;
+            return (
+              <option key={val} value={val}>
+                {val} km
+              </option>
+            );
+          })}
+        </select>
 
-        <label className="block mb-2">
-          <input type="checkbox" checked={park} onChange={() => setPark(!park)} />
-          <span className="ml-2">Preferuję parki</span>
-        </label>
-
-        <label className="block mb-4">
-          <input type="checkbox" checked={sidewalk} onChange={() => setSidewalk(!sidewalk)} />
-          <span className="ml-2">Preferuję chodniki</span>
-        </label>
+        {/* Preference (Radio Buttons) */}
+        <fieldset className="mb-4">
+          <legend className="mb-2 font-medium">Green area preference:</legend>
+          {["prefer", "default", "avoid"].map((opt) => (
+            <label key={opt} className="block mb-1">
+              <input
+                type="radio"
+                name="preference"
+                value={opt}
+                checked={preference === opt}
+                onChange={() => setPreference(opt)}
+              />
+              <span className="ml-2 capitalize">{opt} green</span>
+            </label>
+          ))}
+        </fieldset>
 
         <button
           onClick={handleSubmit}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          Pokaż trasę
+          Show route
         </button>
 
-        {/* Zapisz trasę */}
+        {/* Save route */}
         <div className="mt-6">
           <input
             type="text"
             value={routeName}
             onChange={(e) => setRouteName(e.target.value)}
-            placeholder="Nazwa trasy"
+            placeholder="Route name"
             className="w-full px-3 py-2 rounded border dark:bg-gray-700 mb-2"
           />
           <button
             onClick={handleSave}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
-            Zapisz trasę
+            Save route
           </button>
 
-          {/* Lista ulubionych tras */}
+          {/* Favorite routes list */}
           {favoriteRoutes.length > 0 && (
             <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">Ulubione trasy</h3>
+              <h3 className="text-lg font-semibold mb-2">Favorite routes</h3>
               <ul className="list-disc list-inside space-y-1">
                 {favoriteRoutes.map((route, index) => (
                   <li key={index}>
-                    <span className="font-medium">{route.name}</span> – {route.distance} km
+                    <span className="font-medium">{route.name}</span> – {route.distance} km – {route.preference}
                   </li>
                 ))}
               </ul>
@@ -119,7 +127,7 @@ export default function RouteConfig() {
         </div>
       </div>
 
-      {/* Mapa */}
+      {/* Map */}
       <div className="w-full md:w-2/3 h-[500px] rounded-xl overflow-hidden shadow-md">
         <MapContainer center={startPosition as LatLngExpression} zoom={13} className="w-full h-full">
           <TileLayer
