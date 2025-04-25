@@ -1,30 +1,44 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Ikona Leafleta
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-});
+import useToken from '../contexts/TokenContext';
+import { generateRoute } from '@/app/Api';
 
 export default function RouteConfig() {
+  const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
   const [distance, setDistance] = useState(2);
   const [preference, setPreference] = useState("default");
-  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]);
+  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]); // Kraków
 
   const [routeName, setRouteName] = useState('');
   const [favoriteRoutes, setFavoriteRoutes] = useState<
     { name: string; distance: number; preference: string; position: [number, number] }[]
   >([]);
 
-  const handleSubmit = () => {
-    console.log({ distance, preference, startPosition });
+  const token = useToken();
+
+  useEffect(() => {
+    if (isErrorDisplayed) {
+      setTimeout(() => {
+        setIsErrorDisplayed(value => !value)
+      }, 5000);
+    }
+  }, [isErrorDisplayed, setIsErrorDisplayed])
+
+  const handleGenerateRoute = () => {
+    generateRoute(
+      token,
+      startPosition[0],
+      startPosition[1],
+      distance * 1000,
+      preference === "prefer",
+      preference === "avoid",
+      preference === "base on weather").then((response) => {
+        if (response === false) {
+          setIsErrorDisplayed(true);
+        }
+      });
   };
 
   const handleSave = () => {
@@ -74,7 +88,7 @@ export default function RouteConfig() {
         {/* Preference (Radio Buttons) */}
         <fieldset className="mb-4">
           <legend className="mb-2 font-medium">Green area preference:</legend>
-          {["prefer", "default", "avoid"].map((opt) => (
+          {["prefer", "default", "avoid", "base on weather"].map((opt) => (
             <label key={opt} className="block mb-1">
               <input
                 type="radio"
@@ -89,11 +103,17 @@ export default function RouteConfig() {
         </fieldset>
 
         <button
-          onClick={handleSubmit}
+          onClick={handleGenerateRoute}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Show route
         </button>
+          {!!isErrorDisplayed &&
+            <p>
+              Service with routes is temporary unavailable. Please try again later.
+            </p>
+          }
+        </div>
 
         {/* Save route */}
         <div className="mt-6">

@@ -1,7 +1,18 @@
-import osmnx as ox
+import os
 import random
+import logging
+import threading
+
 import numpy as np
 import networkx as nx
+import osmnx as ox
+
+
+G = None
+GRAPH_FILEPATH = "/app/graph/cracow_graph.graphml"
+_event_graph_loaded = threading.Event()
+log = logging.getLogger('ROUTE_ALGORITHM')
+
 
 def calculate_new_coords(start_lat, start_lon, distance_km, bearing_deg):
     start_lat_rad = np.radians(start_lat)
@@ -37,6 +48,26 @@ def select_non_adjacent_nodes(path_segment, count):
 
     return selected
 
+def load_graph():
+    log.info('Graph loading started')
+    global G, _event_graph_loaded
+    if not os.path.exists(GRAPH_FILEPATH):
+        G = download_and_save_graph()
+    else:
+        try:
+            G = ox.load_graphml(GRAPH_FILEPATH)
+        except Exception as e:
+            log.exception(f'Exception during graph loading: {e}')
+            G = download_and_save_graph()
+    log.info('Graph loaded')
+    _event_graph_loaded.set()
+
+def download_and_save_graph():
+    city = "Kraków, Polska"
+    G = ox.graph_from_place(city, network_type="walk", simplify=True)
+    ox.save_graphml(G, filepath=GRAPH_FILEPATH)
+    return G
+
 def algorithm(
     starting_point: tuple[float],
     declared_distance: int,
@@ -44,12 +75,13 @@ def algorithm(
     is_avoid_green: bool = False,
     is_include_wheather: bool = False
 ):
+    global G, _event_graph_loaded
+
+    _event_graph_loaded.wait()
+    
     try:
         start_lat, start_lon = starting_point
         distance_km = declared_distance / 1000.0
-
-        miasto = "Kraków, Polska"
-        G = ox.graph_from_place(miasto, network_type="walk", simplify=True)
 
         random_bearing = random.uniform(0, 360)
         new_lat, new_lon = calculate_new_coords(start_lat, start_lon, distance_km, random_bearing)
@@ -95,5 +127,5 @@ def algorithm(
         return route_coords, int(real_distance)
 
     except Exception as e:
-        print(f"Error in algorithm: {e}")
+        log.exception(f"Error in algorithm: {e}")
         return None, 0

@@ -2,7 +2,7 @@ import logging
 
 from flask import request
 from flask_restx import Resource, fields, Namespace
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 from ..database.queries import Queries as db
 from ..utils.request import send_request
@@ -56,7 +56,6 @@ class Route(Resource):
         """
         pass
 
-    @jwt_required()
     @api.expect(declared_parameters_model, validate=True)
     @api.marshal_with(route_model, code=200)
     @api.response(200, 'OK')
@@ -68,17 +67,14 @@ class Route(Resource):
         Generate a new route based on parameters
         """
         json = request.json
-        user_id = get_jwt_identity()
 
-        queries = db()
-
-        point = json.get('point')
-        latitude = point.get('latitude')
-        longitude = point.get('longitude')
-        declared_distance = json.get('declared_distance')
-        is_prefer_green = json.get('is_prefer_green')
-        is_avoid_green = json.get('is_avoid_green')
-        is_include_weather = json.get('is_include_weather')
+        point = json.get('point', {})
+        latitude = point.get('latitude', 0.0)
+        longitude = point.get('longitude', 0.0)
+        declared_distance = json.get('declared_distance', 1000)
+        is_prefer_green = json.get('is_prefer_green', False)
+        is_avoid_green = json.get('is_avoid_green', False)
+        is_include_weather = json.get('is_include_weather', False)
 
         route, real_distance = algorithm(
             (latitude, longitude), 
@@ -91,19 +87,32 @@ class Route(Resource):
         if not route:
             api.abort(500)
 
-        route_data = {
-            "route": route,   
-            "real_distance": real_distance,
-            "declared_distance": declared_distance,
-            "is_prefer_green": is_prefer_green,
-            "is_avoid_green": is_avoid_green,
-            "is_include_weather": is_include_weather,
-            "user_id": user_id
-        }
+        route_id = ''
+        timestamp = ''
+        user_id = None
 
-        route_id, timestamp = queries.insert_route(route_data)
-        if not route_id:
-            api.abort(500)
+        try:
+            verify_jwt_in_request()
+            user_id = get_jwt_identity()
+        except:
+            pass
+        
+        if user_id:
+            queries = db()
+
+            route_data = {
+                "route": route,   
+                "real_distance": real_distance,
+                "declared_distance": declared_distance,
+                "is_prefer_green": is_prefer_green,
+                "is_avoid_green": is_avoid_green,
+                "is_include_weather": is_include_weather,
+                "user_id": user_id
+            }
+
+            route_id, timestamp = queries.insert_route(route_data)
+            if not route_id:
+                api.abort(500)
 
         output_json = {
             "id": route_id,
