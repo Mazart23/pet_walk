@@ -9,7 +9,7 @@ export default function RouteConfig() {
   const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
   const [distance, setDistance] = useState(2);
   const [preference, setPreference] = useState("default");
-  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]); // Kraków
+  const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]);
 
   const [routeName, setRouteName] = useState('');
   const [favoriteRoutes, setFavoriteRoutes] = useState<
