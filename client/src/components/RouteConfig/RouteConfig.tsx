@@ -108,6 +108,7 @@ export default function RouteConfig() {
         >
           Show route
         </button>
+        <div>
           {!!isErrorDisplayed &&
             <p>
               Service with routes is temporary unavailable. Please try again later.

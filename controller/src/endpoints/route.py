@@ -1,8 +1,9 @@
 import logging
+from datetime import datetime
 
 from flask import request
 from flask_restx import Resource, fields, Namespace
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, jwt_required
 
 from ..database.queries import Queries as db
 from ..utils.request import send_request
@@ -27,9 +28,14 @@ declared_parameters_model = api.model('DeclaredPameters', {
     'is_include_weather': fields.Boolean(description="Whether route should be fitted to current wheather", example=False),
 })
 
+route_obj_model = api.model('RouteObj', {
+    'type': fields.String(description="Type of the route", example="LineString"),
+    'coordinates': fields.List(fields.List(fields.Float), description="List of coordinates forming the route"),
+})
+
 route_model = api.model('Route', {
     'id': fields.String(description="Unique ID of the route", example="6752269f6f218f859668c4ba"),
-    'route': fields.List(fields.List(fields.Float), description="List of coordinates forming the route"),
+    'route': route_obj_model,
     'declared_parameters': fields.Nested(declared_parameters_model),
     'real_distance': fields.Integer(description="Real calculated distance of the route in meters", example=1000),
     'timestamp': fields.String(description="Timestamp of the route generation", example="2024-12-05 21:18:07"),
@@ -39,22 +45,48 @@ route_list_model = api.model('RoutesList', {
     'routes': fields.List(fields.Nested(route_model), description="List of routes")
 })
 
+delete_route_model = api.model('DeleteRoute', {
+    'id': fields.String(description="Unique ID of the route", example="6752269f6f218f859668c4ba"),
+})
+
 
 @api.route('/')
 class Route(Resource):
-    @api.doc(
-        params={
-            "user_id": {"description": "Filter routes by user ID.", "example": "671f880f5bf26ed4c9f540fd", "required": False},
-        }
-    )
     @api.response(200, "OK")
     @api.response(500, "Internal Server Error")
     @api.marshal_with(route_list_model, code=200)
+    @jwt_required()
     def get(self):
         """
         Fetch routes based on user_id
         """
-        pass
+        user_id = get_jwt_identity()
+
+        queries = db()
+
+        data = queries.get_routes_by_user_id(user_id)
+
+        return {'routes': data}
+    
+    @api.expect(delete_route_model, validate=True)
+    @api.response(200, "OK")
+    @api.response(500, "Internal Server Error")
+    @jwt_required()
+    def delete(self):
+        """
+        Delete route based on id of the route
+        """
+        user_id = get_jwt_identity()
+        route_id = request.json.get('id')
+
+        queries = db()
+
+        status = queries.delete_route(route_id, user_id)
+
+        if not status:
+            api.abort(500)
+        
+        return 'OK', 200
 
     @api.expect(declared_parameters_model, validate=True)
     @api.marshal_with(route_model, code=200)
@@ -76,7 +108,7 @@ class Route(Resource):
         is_avoid_green = json.get('is_avoid_green', False)
         is_include_weather = json.get('is_include_weather', False)
 
-        route, real_distance = algorithm(
+        coords, real_distance = algorithm(
             (latitude, longitude), 
             declared_distance, 
             is_prefer_green, 
@@ -84,7 +116,7 @@ class Route(Resource):
             is_include_weather
         )
 
-        if not route:
+        if not coords:
             api.abort(500)
 
         route_id = ''
@@ -101,7 +133,7 @@ class Route(Resource):
             queries = db()
 
             route_data = {
-                "route": route,   
+                "route": coords,   
                 "real_distance": real_distance,
                 "declared_distance": declared_distance,
                 "is_prefer_green": is_prefer_green,
@@ -110,13 +142,24 @@ class Route(Resource):
                 "user_id": user_id
             }
 
-            route_id, timestamp = queries.insert_route(route_data)
-            if not route_id:
-                api.abort(500)
+            result = queries.insert_route(route_data)
 
+            if not result:
+                api.abort(500)
+                
+            route_id = result['id']
+            timestamp = result['timestamp']
+        
+        else:
+            route_id = -1
+            timestamp = datetime.now()
+        
         output_json = {
             "id": route_id,
-            "route": route,   
+            "route": {
+                'type': 'LineString',
+                'coordinates': coords,
+            },   
             "real_distance": real_distance,
             "declared_parameters": {
                 "point": {

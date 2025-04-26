@@ -21,5 +21,6 @@ CREATE TABLE IF NOT EXISTS routes (
     is_avoid_green BOOLEAN,          
     is_prefer_green BOOLEAN,         
     is_include_weather BOOLEAN,      
-    route geometry(LINESTRING, 4326) 
+    route geometry(LINESTRING, 4326),
+    `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

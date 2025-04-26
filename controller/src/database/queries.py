@@ -171,7 +171,7 @@ class Queries(PostgresConnect):
                 is_avoid_green,
                 is_prefer_green,
                 is_include_weather,
-                ST_AsText(route) AS route
+                ST_AsGeoJSON(route) AS route
             FROM routes
             WHERE id = %s
         """
@@ -193,7 +193,7 @@ class Queries(PostgresConnect):
                 is_avoid_green,
                 is_prefer_green,
                 is_include_weather,
-                ST_AsText(route) AS route
+                ST_AsGeoJSON(route) AS route
             FROM routes
             WHERE user_id = %s
         """
@@ -202,15 +202,7 @@ class Queries(PostgresConnect):
             return dict(rows[0])
         return {}
 
-    def create_route(self,
-        user_id: int,
-        declared_distance: int,
-        real_distance: int,
-        is_avoid_green: bool,
-        is_prefer_green: bool,
-        is_include_weather: bool,
-        wkt_line: str
-    ) -> int:
+    def insert_route(self, route_dict: dict) -> dict[str, int | str] | None:
         """
         Create a new route using ST_GeomFromText to insert geometry.
         """
@@ -226,24 +218,40 @@ class Queries(PostgresConnect):
             )
             VALUES (
                 %s, %s, %s, %s, %s, %s,
-                ST_GeomFromText(%s, 4326)
+                ST_GeomFromText(LineString(%s), 4326)
             )
-            RETURNING id
+            RETURNING id, timestamp;
         """
         rows = self.execute_query(
             query,
             (
-                user_id,
-                declared_distance,
-                real_distance,
-                is_avoid_green,
-                is_prefer_green,
-                is_include_weather,
-                wkt_line
+                route_dict['user_id'],
+                route_dict['declared_distance'],
+                route_dict['real_distance'],
+                route_dict['is_avoid_green'],
+                route_dict['is_prefer_green'],
+                route_dict['is_include_weather'],
+                ', '.join(f'{coords[0]} {coords[1]}' for coords in route_dict['route'])
             )
         )
         if rows:
-            return rows[0]['id']
+            return rows[0]
+        
+    def delete_route(self, route_id: int, user_id: str) -> bool:
+        """
+        Route deletion
+        """
+        query = """
+            DELETE FROM routes
+            WHERE id IN (
+                SELECT id FROM routes
+                WHERE id = %s AND user_id = %s
+                LIMIT 1
+            )
+            RETURNING id;
+        """
+        result = self.execute_query(query, (route_id, user_id))
+        return bool(result)
 
 # class Queries(MongoDBConnect):
 
