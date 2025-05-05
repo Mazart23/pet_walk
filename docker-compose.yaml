@@ -71,7 +71,7 @@ services:
       - controller
       - notifier
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001"]
+      test: ["CMD", "curl", "-f", "http://controller:5001"]
       interval: 5s
       retries: 10
     logging:
