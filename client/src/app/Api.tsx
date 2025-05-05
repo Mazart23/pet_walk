@@ -1,57 +1,88 @@
+// client / src / app / Api.tsx
+//---------------------------------------------------------------
+// 1. Importy + bazowy adres backendu
+//---------------------------------------------------------------
 import apiClient from "@/utils/apiClient";
 import { services, servicesWait } from "@/utils/loadServices";
 
-/*
-API async functions below
-*/
+// jeżeli config‑serwer zwrócił wpis „controller”, użyjemy go;
+// w przeciwnym razie łączymy się lokalnie na 5001
+const getBaseUrl = () => services.controller?.url || "http://localhost:5001";
 
-export async function postLogin(username, password) {
-  await servicesWait();
-  return apiClient
-    .post(`${services.controller.url}/user/login`, {
-      username: username,
-      password: password
-    })
-    .then((response) => {
-      return response.data.access_token;
-    })
-    .catch((error) => {
-      throw error;
-    });
+//---------------------------------------------------------------
+// 2. Typy
+//---------------------------------------------------------------
+interface TokenResponse  { access_token: string }
+interface SignupResponse { message: string  }
+interface PostsResponse  { posts: any[]     }
+
+export interface RouteGeoJSON {
+  type: "LineString";
+  coordinates: number[][];
 }
 
-export async function postSignup(username: string, email: string, password: string, phone?: string) {
-  await servicesWait();
-  return apiClient
-    .post(`${services.controller.url}/user/signup`, {
-      username,
-      email,
-      password,
-      phone
-    })
-    .then((response) => {
-      return response.data.message;
-    })
-    .catch((error) => {
-      throw error;
-    });
+export interface BackendRoute {
+  id: number;
+  decl_distance: number;
+  is_avoid_green: boolean;
+  is_prefer_green: boolean;
+  is_include_weather: boolean;
+  route: string;                 // GeoJSON zakodowany jako string
+  timestamp: string;
 }
 
-export async function fetchUserSelfData(token) {
-  await servicesWait();
-  return apiClient
-    .get(`${services.controller.url}/user/self`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      }
-    })
-    .then((response) => response.data)
-    .catch((error) => {
-      throw error;
-    });
+export interface SavedRoute extends Omit<BackendRoute, "route"> {
+  geojson: RouteGeoJSON;
 }
 
-export async function fetchPosts(user_id = null, last_timestamp = null, limit = 10) {
+//---------------------------------------------------------------
+// 3. Autoryzacja
+//---------------------------------------------------------------
+export async function postLogin(
+  username: string,
+  password: string
+): Promise<string> {
+  await servicesWait();
+
+  const { data } = await apiClient.post<TokenResponse>(
+    `${getBaseUrl()}/user/login`,
+    { username, password }
+  );
+  return data.access_token;
+}
+
+export async function postSignup(
+  username: string,
+  email: string,
+  password: string,
+  phone?: string
+): Promise<string> {
+  await servicesWait();
+
+  const { data } = await apiClient.post<SignupResponse>(
+    `${getBaseUrl()}/user/signup`,
+    { username, email, password, phone }
+  );
+  return data.message;
+}
+
+export async function fetchUserSelfData(token: string) {
+  await servicesWait();
+
+  const { data } = await apiClient.get(`${getBaseUrl()}/user/self`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}
+
+//---------------------------------------------------------------
+// 4. Posty (jeżeli korzystasz z feedu)
+//---------------------------------------------------------------
+export async function fetchPosts(
+  user_id: string | null = null,
+  last_timestamp: string | null = null,
+  limit = 10
+) {
   await servicesWait();
 
   const params = {
@@ -60,58 +91,91 @@ export async function fetchPosts(user_id = null, last_timestamp = null, limit = 
     ...(last_timestamp && { last_timestamp }),
   };
 
-  try {
-    const response = await apiClient.get(`${services.controller.url}/post`, { params });
-    return response.data.posts;
-  } catch (error) {
-    console.error("Error fetching posts:", error.response?.data || error.message);
-    throw error;
-  }
+  const { data } = await apiClient.get<PostsResponse>(
+    `${getBaseUrl()}/post`,
+    { params }
+  );
+  return data.posts;
 }
 
-export async function getPost(token, postId) {
+export async function getPost(token: string, postId: string) {
   await servicesWait();
 
-  return apiClient
-    .get(`${services.controller.url}/post/single`, { 
-      params: { 
-        id: postId 
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((response) => response.data)
-    .catch((error) => {
-      throw error;
-    });
+  const { data } = await apiClient.get(`${getBaseUrl()}/post/single`, {
+    params: { id: postId },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
 }
 
+//---------------------------------------------------------------
+// 5. Trasy: generuj / pobierz / zapisz / usuń
+//---------------------------------------------------------------
 export async function generateRoute(
-  token,
-  latitude,
-  longitude,
-  declared_distance,
-  is_prefer_green,
-  is_avoid_green,
-  is_include_weather
-) {
+  token: string,
+  latitude: number,
+  longitude: number,
+  declared_distance: number,
+  is_prefer_green: boolean,
+  is_avoid_green: boolean,
+  is_include_weather: boolean
+): Promise<BackendRoute> {
   await servicesWait();
 
-  return apiClient
-    .post(`${services.controller.url}/route/`, 
-      {
-        point: {latitude, longitude},
-        declared_distance,
-        is_prefer_green,
-        is_avoid_green,
-        is_include_weather
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      }
-    )
-    .then((response) => response.data);
+  const { data } = await apiClient.post<BackendRoute>(
+    `${getBaseUrl()}/route/`,
+    {
+      point: { latitude, longitude },
+      declared_distance,
+      is_prefer_green,
+      is_avoid_green,
+      is_include_weather,
+    },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data;
 }
+
+export async function getRoutes(token: string): Promise<SavedRoute[]> {
+  await servicesWait();
+
+  const { data } = await apiClient.get<{ routes: BackendRoute[] }>(
+    `${getBaseUrl()}/route/`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return data.routes.map((r) => ({
+    ...r,
+    geojson: JSON.parse(r.route),
+  }));
+}
+
+export async function saveRoute(
+  token: string,
+  payload: BackendRoute
+): Promise<SavedRoute> {
+  await servicesWait();
+
+  const { data } = await apiClient.post<BackendRoute>(
+    `${getBaseUrl()}/route/`,
+    payload,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return { ...data, geojson: JSON.parse(data.route) };
+}
+
+export async function removeRoute(
+  token: string,
+  routeId: number
+): Promise<void> {
+  await servicesWait();
+
+  await apiClient.delete(`${getBaseUrl()}/route/${routeId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+
+
+
