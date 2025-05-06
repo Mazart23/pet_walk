@@ -113,5 +113,6 @@ export async function generateRoute(
         }
       }
     )
-    .then((response) => response.data);
+    .then((response) => response.data)
+    .catch((err) => false);
 }

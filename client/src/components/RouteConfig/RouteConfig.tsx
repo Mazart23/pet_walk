@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 import useToken from '../contexts/TokenContext';
 import { generateRoute } from '@/app/Api';
@@ -15,6 +15,7 @@ export default function RouteConfig() {
   const [favoriteRoutes, setFavoriteRoutes] = useState<
     { name: string; distance: number; preference: string; position: [number, number] }[]
   >([]);
+  const [currentRoute, setCurrentRoute] = useState({});
 
   const token = useToken();
 
@@ -27,6 +28,7 @@ export default function RouteConfig() {
   }, [isErrorDisplayed, setIsErrorDisplayed])
 
   const handleGenerateRoute = () => {
+    setCurrentRoute({});
     generateRoute(
       token,
       startPosition[0],
@@ -37,6 +39,8 @@ export default function RouteConfig() {
       preference === "base on weather").then((response) => {
         if (response === false) {
           setIsErrorDisplayed(true);
+        } else {
+          setCurrentRoute(response);
         }
       });
   };
@@ -155,6 +159,7 @@ export default function RouteConfig() {
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {currentRoute?.route && <GeoJSON data={currentRoute.route} />}
           <LocationMarker />
         </MapContainer>
       </div>

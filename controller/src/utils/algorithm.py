@@ -84,12 +84,19 @@ def algorithm(
         distance_km = declared_distance / 1000.0
 
         random_bearing = random.uniform(0, 360)
-        new_lat, new_lon = calculate_new_coords(start_lat, start_lon, distance_km, random_bearing)
+        new_lat, new_lon = calculate_new_coords(start_lat, start_lon, distance_km / 2, random_bearing)
 
         start_node = ox.distance.nearest_nodes(G, start_lon, start_lat)
         end_node = ox.distance.nearest_nodes(G, new_lon, new_lat)
 
         path = nx.shortest_path(G, start_node, end_node, weight="length")
+
+        half_real_dinstance = 0
+        for i in range(len(path) - 1):
+            half_real_dinstance += G[path[i]][path[i+1]][0]['length']
+            if half_real_dinstance >= distance_km / 2:
+                path = path[:i]
+                break
 
         path_length = len(path)
         quarter = path_length // 4
@@ -116,7 +123,7 @@ def algorithm(
         except nx.NetworkXNoPath:
             return None, None
 
-        route_coords = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in path + return_path[::-1]]
+        route_coords = [(G.nodes[node]['x'], G.nodes[node]['y']) for node in path + return_path]
 
         real_distance = 0
         for i in range(len(path) - 1):
