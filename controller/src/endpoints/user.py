@@ -167,7 +167,7 @@ class Login(Resource):
         queries = db()
 
         user = queries.get_user_password_by_username(username)
-        print(user)
+
         if not user or not bcrypt.checkpw(password.encode('utf-8'), user.get('password').encode('utf-8')):
             api.abort(401, 'Unauthorized')
         

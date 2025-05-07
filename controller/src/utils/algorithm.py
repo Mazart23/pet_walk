@@ -94,7 +94,7 @@ def algorithm(
         half_real_dinstance = 0
         for i in range(len(path) - 1):
             half_real_dinstance += G[path[i]][path[i+1]][0]['length']
-            if half_real_dinstance >= distance_km / 2:
+            if half_real_dinstance >= declared_distance / 2:
                 path = path[:i]
                 break
 

@@ -87,7 +87,6 @@ class Queries(PostgresConnect):
             WHERE username = %s
         """
         rows = self.execute_query(query, (username,))
-        print(rows)
         if rows:
             return dict(rows[0])
         return {}
