@@ -51,32 +51,11 @@ export async function fetchUserSelfData(token) {
     });
 }
 
-export async function fetchPosts(user_id = null, last_timestamp = null, limit = 10) {
-  await servicesWait();
-
-  const params = {
-    limit,
-    ...(user_id && { user_id }),
-    ...(last_timestamp && { last_timestamp }),
-  };
-
-  try {
-    const response = await apiClient.get(`${services.controller.url}/post`, { params });
-    return response.data.posts;
-  } catch (error) {
-    console.error("Error fetching posts:", error.response?.data || error.message);
-    throw error;
-  }
-}
-
-export async function getPost(token, postId) {
+export async function fetchRoutes(token) {
   await servicesWait();
 
   return apiClient
-    .get(`${services.controller.url}/post/single`, { 
-      params: { 
-        id: postId 
-      },
+    .get(`${services.controller.url}/route/`, { 
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -85,6 +64,24 @@ export async function getPost(token, postId) {
     .catch((error) => {
       throw error;
     });
+}
+
+export async function deleteRoute(token, routeId) {
+  await servicesWait();
+
+  return apiClient
+    .delete(`${services.controller.url}/route/`, 
+      {
+        id: routeId
+      },
+      { 
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      }
+    )
+    .then((response) => true)
+    .catch((error) => false);
 }
 
 export async function generateRoute(

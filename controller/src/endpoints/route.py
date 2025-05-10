@@ -1,4 +1,5 @@
 import logging
+import json
 from datetime import datetime
 
 from flask import request
@@ -34,7 +35,7 @@ route_obj_model = api.model('RouteObj', {
 })
 
 route_model = api.model('Route', {
-    'id': fields.String(description="Unique ID of the route", example="6752269f6f218f859668c4ba"),
+    'id': fields.Integer(description="Unique ID of the route", example=1),
     'route': fields.Nested(route_obj_model),
     'declared_parameters': fields.Nested(declared_parameters_model),
     'real_distance': fields.Integer(description="Real calculated distance of the route in meters", example=1000),
@@ -46,12 +47,20 @@ route_list_model = api.model('RoutesList', {
 })
 
 delete_route_model = api.model('DeleteRoute', {
-    'id': fields.String(description="Unique ID of the route", example="6752269f6f218f859668c4ba"),
+    'id': fields.Integer(description="Unique ID of the route", example=1),
 })
 
 
 @api.route('/')
 class Route(Resource):
+    @api.doc(params={
+        'Authorization': {
+            'description': 'Bearer token for authentication',
+            'required': True,
+            'in': 'header',
+            'default': 'Bearer '
+        }
+    })
     @api.response(200, "OK")
     @api.response(500, "Internal Server Error")
     @api.marshal_with(route_list_model, code=200)
@@ -66,8 +75,27 @@ class Route(Resource):
 
         data = queries.get_routes_by_user_id(user_id)
 
+        for dct in data:
+            p_coords = json.loads(dct.pop('point'))['coordinates']
+            dct['declared_parameters'] = {
+                'point': {'latitude': p_coords[1], 'longitude': p_coords[0]},
+                'declared_distance': dct.pop('declared_distance'),
+                'is_avoid_green': dct.pop('is_avoid_green'),
+                'is_prefer_green': dct.pop('is_prefer_green'),
+                'is_include_weather': dct.pop('is_include_weather'),
+            }
+            dct['route'] = json.loads(dct.pop('route'))
+
         return {'routes': data}
     
+    @api.doc(params={
+        'Authorization': {
+            'description': 'Bearer token for authentication',
+            'required': True,
+            'in': 'header',
+            'default': 'Bearer '
+        }
+    })
     @api.expect(delete_route_model, validate=True)
     @api.response(200, "OK")
     @api.response(500, "Internal Server Error")
@@ -87,7 +115,15 @@ class Route(Resource):
             api.abort(500)
         
         return 'OK', 200
-
+    
+    @api.doc(params={
+        'Authorization': {
+            'description': 'Bearer token for authentication',
+            'required': False,
+            'in': 'header',
+            'default': 'Bearer '
+        }
+    })
     @api.expect(declared_parameters_model, validate=True)
     @api.marshal_with(route_model, code=200)
     @api.response(200, 'OK')
@@ -133,7 +169,9 @@ class Route(Resource):
             queries = db()
 
             route_data = {
-                "route": coords,   
+                "route": coords,
+                "latitude": latitude,
+                "longitude": longitude,
                 "real_distance": real_distance,
                 "declared_distance": declared_distance,
                 "is_prefer_green": is_prefer_green,
