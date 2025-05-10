@@ -131,7 +131,7 @@ class Route(Resource):
         
         if user_id:
             queries = db()
-            log.info(f"User ID: {user_id}")
+
             route_data = {
                 "route": coords,   
                 "real_distance": real_distance,
@@ -143,7 +143,7 @@ class Route(Resource):
             }
 
             result = queries.insert_route(route_data)
-            log.info(f"result: {result}")
+
             if not result:
                 api.abort(500)
                 
