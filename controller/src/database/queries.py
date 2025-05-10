@@ -156,28 +156,6 @@ class Queries(PostgresConnect):
         except Exception as e:
             log.error(f"Error updating profile picture for user {user_id}: {e}")
             return False
-    
-    def get_route_by_id(self, route_id: int) -> dict:
-        """
-        Retrieve a route by its ID.
-        """
-        query = """
-            SELECT
-                id,
-                user_id,
-                declared_distance,
-                real_distance,
-                is_avoid_green,
-                is_prefer_green,
-                is_include_weather,
-                ST_AsGeoJSON(route) AS route
-            FROM routes
-            WHERE id = %s
-        """
-        rows = self.execute_query(query, (route_id,))
-        if rows:
-            return dict(rows[0])
-        return {}
 
     def get_routes_by_user_id(self, user_id: int) -> list:
         """
@@ -192,14 +170,15 @@ class Queries(PostgresConnect):
                 is_avoid_green,
                 is_prefer_green,
                 is_include_weather,
-                ST_AsGeoJSON(route) AS route
+                ST_AsGeoJSON(start_point) AS point,
+                ST_AsGeoJSON(route) AS route,
+                timestamp
             FROM routes
             WHERE user_id = %s
         """
         rows = self.execute_query(query, (user_id,))
-        if rows:
-            return dict(rows[0])
-        return {}
+        log.info(rows)
+        return rows if rows else []
 
     def insert_route(self, route_dict: dict) -> dict[str, int | str] | None:
         """
@@ -213,12 +192,16 @@ class Queries(PostgresConnect):
                 is_avoid_green,
                 is_prefer_green,
                 is_include_weather,
+                start_point,
                 route
             )
-            VALUES (
+            SELECT
                 %s, %s, %s, %s, %s, %s,
-                ST_GeomFromText(LineString(%s), 4326)
-            )
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326),
+                ST_GeomFromText(%s, 4326)
+            WHERE (
+                SELECT COUNT(*) FROM routes WHERE user_id = %s
+            ) < 5
             RETURNING id, timestamp;
         """
         rows = self.execute_query(
@@ -230,7 +213,10 @@ class Queries(PostgresConnect):
                 route_dict['is_avoid_green'],
                 route_dict['is_prefer_green'],
                 route_dict['is_include_weather'],
-                ', '.join(f'{coords[0]} {coords[1]}' for coords in route_dict['route'])
+                route_dict['longitude'],
+                route_dict['latitude'],
+                'LINESTRING(' + ', '.join(f'{coords[0]} {coords[1]}' for coords in route_dict['route']) + ')',
+                route_dict['user_id'],
             )
         )
         if rows:

@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS routes (
     real_distance INT,               
     is_avoid_green BOOLEAN,          
     is_prefer_green BOOLEAN,         
-    is_include_weather BOOLEAN,      
+    is_include_weather BOOLEAN,
+    start_point geometry(POINT, 4326),
     route geometry(LINESTRING, 4326),
-    `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    "timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
