@@ -28,12 +28,13 @@ export function servicesWait() {
 }
 
 export function getConfig() {
+  const host =
+    typeof window !== "undefined" ? "localhost" : "controller";
+
   return axios
-    .get("http://localhost:5001/config/services")
-    .then(function (response) {
-      return response.data;
-    })
-    .catch(function (error) {
+    .get(`http://${host}:5001/config/services`)
+    .then((response) => response.data)
+    .catch((error) => {
       throw error;
     });
 }

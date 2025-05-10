@@ -47,6 +47,17 @@ login_input_model = api.model(
     }
 )
 
+signup_input_model = api.model(
+    'Signup input model',
+    {
+        'username': fields.String(required=True),
+        'email': fields.String(required=True),
+        'password': fields.String(required=True),
+        'phone': fields.String(required=False),
+    }
+)
+
+
 login_output_model = api.model(
     'Login output model',
     {
@@ -64,7 +75,7 @@ edit_password_model = api.model(
 )
 
 user_profile_picture_model = api.model(
-    'Login input model',
+    'User profile picture model',
     {
         'profile_picture_url': fields.String(),
     }
@@ -176,7 +187,7 @@ class Login(Resource):
     
 @api.route('/signup')
 class Signup(Resource):
-    @api.expect(user_model, validate=True)
+    @api.expect(signup_input_model, validate=True)
     @api.response(200, 'User created successfully')
     @api.response(400, 'Bad Request')
     @api.response(500, 'Internal Server Error')

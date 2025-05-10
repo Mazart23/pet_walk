@@ -18,7 +18,7 @@ export default function RouteConfig() {
   >([]);
   const [currentRoute, setCurrentRoute] = useState({});
 
-  const token = useToken();
+  const { token } = useToken();
 
   useEffect(() => {
     if (isErrorDisplayed) {
