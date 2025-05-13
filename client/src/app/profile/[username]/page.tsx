@@ -5,7 +5,7 @@ import { fetchRoutes, deleteRoute } from '@/app/Api';
 import useToken from '@/components/contexts/TokenContext';
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Feature } from 'geojson';
-
+import Breadcrumb from "@/components/Common/Breadcrumb";
 
 
 export default function UserProfilePage() {
@@ -36,20 +36,9 @@ export default function UserProfilePage() {
 
   return (
     <>
-    <section className="min-h-[60vh] flex items-center justify-center text-center">
-    <div>
-    <h1 className="text-4xl font-bold mb-4"> </h1>
+     <Breadcrumb />
 
-    <p className="text-lg opacity-0">costam</p>
-    <p className="text-lg opacity-0">costam</p>
-    <p className="text-lg opacity-0">costam</p>
-
-    </div>
-    </section>
-
-    <div className="p-6 text-white">
-      <h1 className="text-3xl font-bold">Profil użytkownika: {username}</h1>
-      <p>Tu będzie więcej szczegółów o użytkowniku!</p>
+    <div className="p-6 text-white">      
       {routes.length > 0 ? (
          <ul className="space-y-4">
          {routes.map((route) => (
@@ -59,14 +48,14 @@ export default function UserProfilePage() {
            >
              <div className="flex justify-between items-center">
                <div>
-                 <p><strong>Dystans:</strong> {(route.real_distance / 1000).toFixed(2)} km</p>
+                 <p><strong>Distance:</strong> {(route.real_distance / 1000).toFixed(2)} km</p>
                  <p>
-                   <strong>Preferencje:</strong>{" "}
+                   <strong>Preferences:</strong>{" "}
                    {route.declared_parameters.is_prefer_green
-                     ? "prefer zielone"
+                     ? "prefer green"
                      : route.declared_parameters.is_avoid_green
-                     ? "unikaj zielonych"
-                     : "domyślne"}
+                     ? "avoid green"
+                     : "default"}
                  </p>
                  <p><strong>Data:</strong> {new Date(route.timestamp).toLocaleString()}</p>
                </div>

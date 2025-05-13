@@ -125,36 +125,7 @@ export default function RouteConfig() {
             }
           </div>
 
-          {/* Save route */}
-          <div className="mt-6">
-            <input
-              type="text"
-              value={routeName}
-              onChange={(e) => setRouteName(e.target.value)}
-              placeholder="Route name"
-              className="w-full px-3 py-2 rounded border dark:bg-gray-700 mb-2"
-            />
-            <button
-              onClick={handleSave}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Save route
-            </button>
 
-            {/* Favorite routes list */}
-            {favoriteRoutes.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Favorite routes</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  {favoriteRoutes.map((route, index) => (
-                    <li key={index}>
-                      <span className="font-medium">{route.name}</span> – {route.distance} km – {route.preference}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
         </div>
         {isLoading && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-xl">
