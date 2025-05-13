@@ -70,20 +70,17 @@ export async function deleteRoute(token, routeId) {
   await servicesWait();
 
   return apiClient
-    .delete(`${services.controller.url}/route/`, 
-      {
-        id: routeId
+    .delete(`${services.controller.url}/route/`, {
+      data: {
+        id: routeId, 
       },
-      { 
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      }
-    )
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
     .then((response) => true)
     .catch((error) => false);
 }
-
 export async function generateRoute(
   token,
   latitude,

@@ -105,11 +105,7 @@ export default function UserProfilePage() {
                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                    />
                    <GeoJSON
-                    data={{
-                        type: "Feature",
-                        geometry: route.route,
-                        properties: {},
-                    } as Feature}
+                    data={route.route}
                     />
                  </MapContainer>
                </div>
