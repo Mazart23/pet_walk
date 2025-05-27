@@ -4,6 +4,8 @@ import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useToken from "../contexts/TokenContext";
 import { postLogin } from "../../app/Api";
+import { toast } from 'react-toastify';
+
 
 const LoginForm = () => {
   const router = useRouter();
@@ -25,8 +27,10 @@ const LoginForm = () => {
         const accessToken = await postLogin(formData.username, formData.password);
         setToken(accessToken);
         router.push("/");
+        toast.success("Login successful!");
       } catch {
-        setErrors({ general: "Password or username is incorrect." });
+        //setErrors({ general: "Password or username is incorrect." });
+        toast.error("Password or username is incorrect.");
       }
     },
     [formData, router, setToken]

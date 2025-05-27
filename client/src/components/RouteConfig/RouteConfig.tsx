@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON } from 'react-le
 import { LatLngExpression } from 'leaflet';
 import useToken from '../contexts/TokenContext';
 import { generateRoute } from '@/app/Api';
+import { toast } from 'react-toastify';
+import Breadcrumb from '../Common/Breadcrumb';
 
 export default function RouteConfig() {
   const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
@@ -40,9 +42,11 @@ export default function RouteConfig() {
       preference === "avoid",
       preference === "base on weather").then((response) => {
         if (response === false) {
-          setIsErrorDisplayed(true);
+          toast.error("Service with routes is temporarily unavailable. Please try again later.");
         } else {
           setCurrentRoute(response);
+          toast.success("Route generated successfully!");
+
         }
         setIsLoading(false);
       });
@@ -70,6 +74,7 @@ export default function RouteConfig() {
   }
 
   return (
+    
     <div className="flex flex-col md:flex-row gap-6 p-4 w-full max-w-[1400px] mx-auto">
       {/* Configuration Panel */}
       {/* <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-xl shadow-md p-6 w-full md:w-1/3"> */}
@@ -117,13 +122,7 @@ export default function RouteConfig() {
           >
             Show route
           </button>
-          <div>
-            {!!isErrorDisplayed &&
-              <p>
-                Service with routes is temporary unavailable. Please try again later.
-              </p>
-            }
-          </div>
+      
 
 
         </div>
@@ -146,5 +145,6 @@ export default function RouteConfig() {
         </MapContainer>
       </div>
     </div>
+    
   );
 }

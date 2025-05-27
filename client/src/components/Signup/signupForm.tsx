@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { postSignup } from "../../app/Api";
+import { toast } from 'react-toastify';
 
 interface FormData {
   username: string;
@@ -105,10 +106,14 @@ const SignupForm = () => {
         formData.phone || ""
       );
 
-      alert("Registration successful! Please log in.");
+      //alert("Registration successful! Please log in.");
+      toast.success("Registration successful! Please log in.");
       router.push("/login");
     } catch (error: any) {
       console.error('Form submission error:', error);
+      toast.error(error.response.data.message);
+      toast.error("An unexpected error occurred. Please try again.");
+
       if (error.response && error.response.status === 400) {
         setErrors({
           general: error.response.data.message
@@ -116,6 +121,7 @@ const SignupForm = () => {
       } else {
         setErrors({
           general: "An unexpected error occurred. Please try again."
+
         });
       }
     } finally {

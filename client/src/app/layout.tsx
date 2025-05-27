@@ -15,6 +15,8 @@ import L from 'leaflet';
 import "node_modules/react-modal-video/css/modal-video.css";
 import "../styles/index.css";
 import 'leaflet/dist/leaflet.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Leaflet Icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -54,6 +56,7 @@ export default function RootLayout({
                 <Providers>
                   <Header />
                   {children}
+                  <ToastContainer position="top-right" autoClose={3000} aria-label="Notification container" />
                   <Footer />
                   <ScrollToTop />
                 </Providers>
