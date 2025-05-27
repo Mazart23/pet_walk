@@ -10,7 +10,7 @@ from ..database.queries import Queries as db
 from ..utils.request import send_request
 from ..utils.apps import Services
 from ..utils.algorithm import algorithm
-
+from ..utils.weather import get_weather_info
 
 log = logging.getLogger('ROUTE')
 
@@ -143,6 +143,18 @@ class Route(Resource):
         is_prefer_green = json.get('is_prefer_green', False)
         is_avoid_green = json.get('is_avoid_green', False)
         is_include_weather = json.get('is_include_weather', False)
+
+        weather_conditions = {}
+        if is_include_weather:
+            try:
+                weather_conditions = get_weather_info(latitude, longitude)
+                log.info(f"Weather conditions at ({latitude}, {longitude}): {weather_conditions}")
+            except Exception as e:
+                log.error(f"WeatherAPI error: {str(e)}")
+                weather_conditions = {
+                    "rain_past_6h": False,
+                    "rain_next_2h": False
+                }
 
         coords, real_distance = algorithm(
             (latitude, longitude), 
