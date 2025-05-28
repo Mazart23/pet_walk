@@ -16,12 +16,10 @@ export default function Home() {
           <h1 className="text-4xl font-bold mb-4"> </h1>
 
           <p className="text-lg opacity-0">costam</p>
-          <p className="text-lg opacity-0">costam</p>
-          <p className="text-lg opacity-0">costam</p>
 
         </div>
       </section>
-      <section className="bg-gray-900 py-10 px-6">
+      <section className=" py-10 px-6">
         <RouteConfig />
       </section>
     </>
