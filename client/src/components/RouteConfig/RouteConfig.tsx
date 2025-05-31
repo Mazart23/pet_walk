@@ -5,10 +5,8 @@ import { LatLngExpression } from 'leaflet';
 import useToken from '../contexts/TokenContext';
 import { generateRoute } from '@/app/Api';
 import { toast } from 'react-toastify';
-import Breadcrumb from '../Common/Breadcrumb';
 import { Trees, Minus, X, CloudSun, Route, Loader2, MapPin, IceCream } from "lucide-react"
 import L from "leaflet"
-
 
 
 export default function RouteConfig() {
@@ -65,18 +63,6 @@ export default function RouteConfig() {
         }
         setIsLoading(false);
       });
-  };
-
-  const handleSave = () => {
-    if (routeName.trim() === '') return;
-    const newRoute = {
-      name: routeName,
-      distance,
-      preference,
-      position: startPosition,
-    };
-    setFavoriteRoutes((prev) => [...prev, newRoute]);
-    setRouteName('');
   };
 
   function LocationMarker() {
@@ -160,26 +146,8 @@ export default function RouteConfig() {
                 </div>
                 <p className="text-sky-100 text-sm">Customize your perfect walk</p>
               </div>
-
-            {/* Distance
-            <label className="block mb-2">Distance: {distance} km</label>
-            <select
-              value={distance}
-              onChange={(e) => setDistance(parseFloat(e.target.value))}
-              className="w-full mb-4 p-2 rounded border dark:bg-gray-700"
-            >
-              {[...Array(10)].map((_, i) => {
-                const val = (i + 1) * 0.5;
-                return (
-                  <option key={val} value={val}>
-                    {val} km
-                  </option>
-                );
-              })}
-            </select> */}
+          
           <div className="p-6 space-y-6">
-
-
               {/* Distance Section */}
               <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -221,28 +189,7 @@ export default function RouteConfig() {
                 </span>
               </div>
             </div>
-
-              {/* Divider */}
-              {/* <div className="border-t border-gray-200 dark:border-gray-700"></div> */}
-
-              {/* Preference (Radio Buttons)
-              <fieldset className="mb-4">
-                <legend className="mb-2 font-medium">Green area preference:</legend>
-                {["prefer", "default", "avoid", "base on weather"].map((opt) => (
-                  <label key={opt} className="block mb-1">
-                    <input
-                      type="radio"
-                      name="preference"
-                      value={opt}
-                      checked={preference === opt}
-                      onChange={() => setPreference(opt)}
-                    />
-                    <span className="ml-2 capitalize">{opt} green</span>
-                  </label>
-                ))}
-              </fieldset> */}
-
-                  {/* Preference (Icon Buttons) */}
+              {/* Preference (Icon Buttons) */}
               <div className="space-y-4">
               <div className="flex items-center gap-2">
                         <Trees className="w-4 h-4 text-gray-800 dark:text-gray-200" />
@@ -302,16 +249,7 @@ export default function RouteConfig() {
                   </button>
                 </div>
               </div>
-      
-
-            {/* <button
-              onClick={handleGenerateRoute}
-              className="bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-600"
-            >
-              Show route
-            </button> */}
-
-           {/* Generate Button */}
+          
            <button
               onClick={handleGenerateRoute}
               disabled={isLoading}
@@ -379,11 +317,6 @@ export default function RouteConfig() {
             </div>
           </div>
         </div>
-        {/* {isLoading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-xl">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-          </div>
-        )} */}
 
          {/* Enhanced Loading Overlay */}
          {isLoading && (
