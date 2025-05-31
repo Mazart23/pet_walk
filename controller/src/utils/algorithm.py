@@ -98,6 +98,7 @@ def algorithm(
                 half_real_dinstance += G[path[i]][path[i+1]][0]['length']
                 if half_real_dinstance >= declared_distance / 2:
                     path = path[:i]
+                    end_node = path[i-1]
                     break
             path_length = len(path)
             quarter = path_length // 4
