@@ -24,24 +24,6 @@ services:
       - "./apps.yaml:/app/config/apps.yaml"
       - "./controller/logs:/app/logs"
 
-  notifier:
-    build:
-      context: ./notifier
-      dockerfile: Dockerfile
-    #restart: always
-    container_name: PW-notifier
-    environment:
-      PYTHONUNBUFFERED: 1
-    networks:
-      - petwalk_network
-    ports:
-      - "5002:5002"
-    env_file:
-      - "./notifier/jwt.env"
-    volumes:
-      - "./apps.yaml:/app/config/apps.yaml"
-      - "./notifier/logs:/app/logs"
-
   postgres:
     build:
       context: ./postgres
@@ -69,7 +51,6 @@ services:
       - "3000:3000"
     depends_on:
       - controller
-      - notifier
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001"]
       interval: 5s
