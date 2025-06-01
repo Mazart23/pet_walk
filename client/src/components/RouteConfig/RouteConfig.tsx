@@ -3,37 +3,62 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON, Popup } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 import useToken from '../contexts/TokenContext';
-import { generateRoute } from '@/app/Api';
+import { generateRoute, fetchRoutes, fetchLoodspots } from '@/app/Api';
 import { toast } from 'react-toastify';
 import { Trees, Minus, X, CloudSun, Route, Loader2, MapPin, IceCream } from "lucide-react"
 import L from "leaflet"
+import Lottie from "react-lottie";
+import dogAnimation from "@/static/animations/dog.json";
 
+// Mock GoodLood ice cream shop locations
+const goodLoodLocationsMock = [
+  { name: "GoodLood Centrum", lat: 50.0614, lng: 19.9365, address: "Rynek Główny 1" },
+  { name: "GoodLood Kazimierz", lat: 50.052, lng: 19.945, address: "ul. Szeroka 15" },
+  { name: "GoodLood Podgórze", lat: 50.047, lng: 19.952, address: "ul. Kalwaryjska 26" },
+  { name: "GoodLood Nowa Huta", lat: 50.077, lng: 19.969, address: "os. Centrum E 1" },
+  { name: "GoodLood Bronowice", lat: 50.085, lng: 19.918, address: "ul. Bronowicka 23" },
+]
 
 export default function RouteConfig() {
   const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRoutesLoaded, setIsRoutesLoaded] = useState(false);
+  const [routesLength, setRoutesLength] = useState(0);
   const [distance, setDistance] = useState(2);
   const [preference, setPreference] = useState("default");
   const [startPosition, setStartPosition] = useState<[number, number]>([50.06143, 19.93658]);
-
-  const [routeName, setRouteName] = useState('');
-  const [favoriteRoutes, setFavoriteRoutes] = useState<
-    { name: string; distance: number; preference: string; position: [number, number] }[]
-  >([]);
+  const [goodLoodLocations, setGoodLoodLocations] = useState([]);
   const [currentRoute, setCurrentRoute] = useState({});
-
   const [showGoodLoodSpots, setShowGoodLoodSpots] = useState(false)
 
-  // Mock GoodLood ice cream shop locations (you can replace with real data)
-  const goodLoodLocations = [
-    { id: 1, name: "GoodLood Centrum", lat: 50.0614, lng: 19.9365, address: "Rynek Główny 1" },
-    { id: 2, name: "GoodLood Kazimierz", lat: 50.052, lng: 19.945, address: "ul. Szeroka 15" },
-    { id: 3, name: "GoodLood Podgórze", lat: 50.047, lng: 19.952, address: "ul. Kalwaryjska 26" },
-    { id: 4, name: "GoodLood Nowa Huta", lat: 50.077, lng: 19.969, address: "os. Centrum E 1" },
-    { id: 5, name: "GoodLood Bronowice", lat: 50.085, lng: 19.918, address: "ul. Bronowicka 23" },
-  ]
-
   const { token } = useToken();
+  
+  useEffect(() => {
+    fetchLoodspots()
+      .then((loodspots) => {
+        if (loodspots.length > 0) {
+          setGoodLoodLocations(loodspots);
+        } else {
+          setGoodLoodLocations(goodLoodLocationsMock);
+        }
+      })
+  }, [])
+
+  useEffect(() => {
+    if (token) {
+      fetchRoutes(token)
+        .then((res) => {
+          if (res?.routes) {
+            setRoutesLength(res.routes.length)
+          }
+        })
+        .finally(() => {
+          setIsRoutesLoaded(true)
+        })
+    } else if (token === null) {
+      setIsRoutesLoaded(true)
+    }
+  }, [token])
 
   useEffect(() => {
     if (isErrorDisplayed) {
@@ -56,10 +81,14 @@ export default function RouteConfig() {
       preference === "base on weather").then((response) => {
         if (response === false) {
           toast.error("Service with routes is temporarily unavailable. Please try again later.");
+        } else if (response?.error === "rate_limit_exceeded") {
+          toast.info(`Please wait ${token ? '1 minute' : '5 minutes'} between route generations.`);
         } else {
           setCurrentRoute(response);
           toast.success("Route generated successfully!");
-
+          setRoutesLength((prev) => {
+            return token ? prev + 1 : prev;
+          });
         }
         setIsLoading(false);
       });
@@ -79,9 +108,9 @@ export default function RouteConfig() {
 
     return (
       <>
-        {goodLoodLocations.map((location) => (
+        {goodLoodLocations.map((location, index) => (
           <Marker
-            key={location.id}
+            key={index}
             position={[location.lat, location.lng]}
             icon={L.divIcon({
               html: `
@@ -252,7 +281,7 @@ export default function RouteConfig() {
           
            <button
               onClick={handleGenerateRoute}
-              disabled={isLoading}
+              disabled={isLoading || !isRoutesLoaded || !(routesLength < 5)}
               className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 
                        text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 
                        hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed 
@@ -263,10 +292,20 @@ export default function RouteConfig() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Generating Route...
                 </>
-              ) : (
+              ) : isRoutesLoaded ? (routesLength < 5) ? (
                 <>
                   <Route className="w-5 h-5" />
                   Generate Route
+                </>
+              ) : (
+                <>
+                  <Route className="w-5 h-5" />
+                  Delete route before generating new
+                </>
+              ) : (
+                <>
+                  <Route className="w-5 h-5" />
+                  Please wait...
                 </>
               )}
             </button>
@@ -280,13 +319,16 @@ export default function RouteConfig() {
                 </div>
 
                 <button
+                  disabled={goodLoodLocations.length === 0}
                   onClick={() => setShowGoodLoodSpots(!showGoodLoodSpots)}
                   className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 
-                            hover:scale-105 hover:shadow-lg ${
-                              showGoodLoodSpots
-                                ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 shadow-lg"
-                                : "border-pink-200 dark:border-pink-700 hover:border-pink-400 dark:hover:border-pink-500 bg-white dark:bg-gray-800"
-                            }`}
+                    hover:scale-105 hover:shadow-lg ${
+                      showGoodLoodSpots
+                        ? "border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 shadow-lg"
+                        : "border-pink-200 dark:border-pink-700 hover:border-pink-400 dark:hover:border-pink-500 bg-white dark:bg-gray-800"
+                    } ${
+                      goodLoodLocations.length === 0 ? "disabled opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
@@ -325,7 +367,18 @@ export default function RouteConfig() {
                         rounded-2xl backdrop-blur-sm"
           >
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-sky-500 border-t-transparent mx-auto mb-4"></div>
+              <Lottie 
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: dogAnimation,
+                  rendererSettings: {
+                    preserveAspectRatio: 'xMidYMid slice'
+                  }
+                }}
+                height={200} 
+                width={200} 
+              />
               <p className="text-gray-600 dark:text-gray-400 font-medium">Creating your perfect route...</p>
             </div>
           </div>

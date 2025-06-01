@@ -51,6 +51,15 @@ export async function fetchUserSelfData(token) {
     });
 }
 
+export async function fetchLoodspots() {
+  await servicesWait();
+
+  return apiClient
+    .get(`${services.controller.url}/route/loodspots`)
+    .then((response) => response.data.loodspots)
+    .catch((error) => []);
+}
+
 export async function fetchRoutes(token) {
   await servicesWait();
 
@@ -108,5 +117,10 @@ export async function generateRoute(
       }
     )
     .then((response) => response.data)
-    .catch((err) => false);
+    .catch((err) => {
+      if (err.response && err.response.status === 429) {
+        return { error: 'rate_limit_exceeded' };
+      }
+      return false;
+    });
 }

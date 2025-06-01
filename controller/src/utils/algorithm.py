@@ -126,13 +126,11 @@ def algorithm(
                 except nx.NetworkXNoPath:
                     log.info('no path exception, retry')
                     if retry == 0:
-                        quarters = quarters[:3]
-                        quarters[2] = quarters[2] + quarters[3]
-                        quarters = quarters[:3]
+                        quarters = [*quarters[:2], quarters[2] + quarters[3]]
                     elif retry == 1:
-                        quarters = [quarters[0] + quarters[1], quarters[2] + quarters[3]]
+                        quarters = [quarters[0] + quarters[1], quarters[2]]
                     elif retry == 2:
-                        quarters = [quarters[0] + quarters[1] + quarters[2] + quarters[3]]
+                        quarters = [quarters[0] + quarters[1]]
                     continue
                 break
             else:
