@@ -47,4 +47,4 @@ COPY . .
 
 EXPOSE 5001
 
-CMD ["gunicorn", "-b", "0.0.0.0:5001", "src:app", "--workers", "4", "--threads", "2", "--timeout", "120"]
+CMD ["python3", "app.py"]
