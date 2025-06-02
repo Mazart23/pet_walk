@@ -7,10 +7,12 @@ from flask_restx import Resource, fields, Namespace
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, jwt_required
 
 from ..database.queries import Queries as db
-from ..utils.request import send_request
-from ..utils.apps import Services
+from ..utils.limiter import limiter, LimitFunc
+from ..utils.cache import cache
 from ..utils.algorithm import algorithm
 from ..utils.weather import get_weather_info
+from ..utils import scrap
+
 
 log = logging.getLogger('ROUTE')
 
@@ -130,6 +132,7 @@ class Route(Resource):
     @api.response(400, "Bad Request")
     @api.response(404, "Not found")
     @api.response(500, "Internal Server Error")
+    @limiter.limit(LimitFunc.limit_logged_users_routes_post)
     def post(self):
         """
         Generate a new route based on parameters
@@ -144,24 +147,22 @@ class Route(Resource):
         is_avoid_green = json.get('is_avoid_green', False)
         is_include_weather = json.get('is_include_weather', False)
 
-        weather_conditions = {}
+        is_rainy: bool = False
+        
         if is_include_weather:
             try:
                 weather_conditions = get_weather_info(latitude, longitude)
                 log.info(f"Weather conditions at ({latitude}, {longitude}): {weather_conditions}")
+                is_rainy = any(weather_conditions.values())
             except Exception as e:
                 log.error(f"WeatherAPI error: {str(e)}")
-                weather_conditions = {
-                    "rain_past_6h": False,
-                    "rain_next_2h": False
-                }
-
+        
+        is_base_on_weather: bool = 
         coords, real_distance = algorithm(
             (latitude, longitude), 
             declared_distance, 
-            is_prefer_green, 
-            is_avoid_green, 
-            is_include_weather
+            is_prefer_green if not is_include_weather else not is_rainy, 
+            is_avoid_green if not is_include_weather else is_rainy
         )
 
         if not coords:
@@ -224,3 +225,32 @@ class Route(Resource):
             "timestamp": timestamp
         }
         return output_json, 200
+
+
+loodspot_model = api.model('Loodspot', {
+    'name': fields.String(description="Name of the loodspot", example="GoodLood Centrum"),
+    'lat': fields.Float(description="Latitude coordinate", example=50.0614),
+    'lng': fields.Float(description="Longitude coordinate", example=19.9365),
+    'address': fields.String(description="Address of the loodspot", example="Rynek Główny 1"),
+})
+
+loodspot_list_model = api.model('LoodspotList', {
+    'loodspots': fields.List(fields.Nested(loodspot_model), description="List of loodspots")
+})
+
+@api.route('/loodspots')
+class Loodspots(Resource):
+    @cache.cached(timeout=86400)
+    @api.response(200, "OK")
+    @api.response(500, "Internal Server Error")
+    @api.marshal_with(loodspot_list_model, code=200)
+    def get(self):
+        """
+        Fetch loodspots
+        """
+        try:
+            result = scrap.fetch_loodspots_krakow()
+        except Exception as e:
+            log.exception(f'Failed to scrap loodspots: {e}')
+            api.abort(500)
+        return {'loodspots': result}

@@ -7,14 +7,13 @@ before execution of other API calls
 
 export let services = {};
 let servicesInitialized = false;
-let servicesPromiseResolve = null;
+const servicesPromiseResolvers = [];
 
 export function setServices(servicesConfig) {
   services = servicesConfig;
   servicesInitialized = true;
-  if (servicesPromiseResolve) {
-    servicesPromiseResolve();
-  }
+  servicesPromiseResolvers.forEach((resolve) => resolve());
+  servicesPromiseResolvers.length = 0;
 }
 
 export function servicesWait() {
@@ -22,14 +21,13 @@ export function servicesWait() {
     if (servicesInitialized) {
       resolve();
     } else {
-      servicesPromiseResolve = resolve;
+      servicesPromiseResolvers.push(resolve);
     }
   });
 }
 
 export function getConfig() {
-  const host =
-    typeof window !== "undefined" ? "localhost" : "controller";
+  const host = "localhost";
 
   return axios
     .get(`http://${host}:5001/config/services`)

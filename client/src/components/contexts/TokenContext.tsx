@@ -4,17 +4,14 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
-// 1. Typ kontekstu
 type TokenContextType = {
   token: string | null;
   setToken: (token: string) => void;
   removeToken: () => void;
 };
 
-// 2. Domyślnie undefined
 const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
-// 3. Hook z walidacją
 const useToken = () => {
   const context = useContext(TokenContext);
   if (!context) {
@@ -23,7 +20,6 @@ const useToken = () => {
   return context;
 };
 
-// 4. Provider z typami propsów
 export const TokenProvider = ({ children }: { children: ReactNode }) => {
   const [token, setTokenState] = useState<string | null>(null);
   const router = useRouter();
