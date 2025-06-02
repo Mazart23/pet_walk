@@ -157,7 +157,6 @@ class Route(Resource):
             except Exception as e:
                 log.error(f"WeatherAPI error: {str(e)}")
         
-        is_base_on_weather: bool = 
         coords, real_distance = algorithm(
             (latitude, longitude), 
             declared_distance, 
