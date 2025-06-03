@@ -22,7 +22,7 @@ class LimitFunc:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
             if user_id:
-                return "1 per minute"
+                return "1 per 15 seconds"
         except:
             pass
-        return "1 per 5 minutes"
+        return "1 per 2 minutes"

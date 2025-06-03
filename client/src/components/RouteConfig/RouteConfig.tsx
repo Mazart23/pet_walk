@@ -82,7 +82,7 @@ export default function RouteConfig() {
         if (response === false) {
           toast.error("Service with routes is temporarily unavailable. Please try again later.");
         } else if (response?.error === "rate_limit_exceeded") {
-          toast.info(`Please wait ${token ? '1 minute' : '5 minutes'} between route generations.`);
+          toast.info(`Please wait ${token ? '15 seconds' : '2 minutes'} between route generations.`);
         } else {
           setCurrentRoute(response);
           toast.success("Route generated successfully!");
@@ -281,7 +281,7 @@ export default function RouteConfig() {
           
            <button
               onClick={handleGenerateRoute}
-              disabled={isLoading || !isRoutesLoaded || !(routesLength < 5)}
+              disabled={isLoading || !isRoutesLoaded || !(routesLength < 10)}
               className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 
                        text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 
                        hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed 
@@ -292,7 +292,7 @@ export default function RouteConfig() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Generating Route...
                 </>
-              ) : isRoutesLoaded ? (routesLength < 5) ? (
+              ) : isRoutesLoaded ? (routesLength < 10) ? (
                 <>
                   <Route className="w-5 h-5" />
                   Generate Route
