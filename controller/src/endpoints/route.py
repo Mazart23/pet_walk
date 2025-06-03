@@ -10,6 +10,7 @@ from ..database.queries import Queries as db
 from ..utils.limiter import limiter, LimitFunc
 from ..utils.cache import cache
 from ..utils.algorithm import algorithm
+from ..utils.weather import get_weather_info
 from ..utils import scrap
 
 
@@ -146,12 +147,21 @@ class Route(Resource):
         is_avoid_green = json.get('is_avoid_green', False)
         is_include_weather = json.get('is_include_weather', False)
 
+        is_rainy: bool = False
+        
+        if is_include_weather:
+            try:
+                weather_conditions = get_weather_info(latitude, longitude)
+                log.info(f"Weather conditions at ({latitude}, {longitude}): {weather_conditions}")
+                is_rainy = any(weather_conditions.values())
+            except Exception as e:
+                log.error(f"WeatherAPI error: {str(e)}")
+        
         coords, real_distance = algorithm(
             (latitude, longitude), 
             declared_distance, 
-            is_prefer_green, 
-            is_avoid_green, 
-            is_include_weather
+            is_prefer_green if not is_include_weather else not is_rainy, 
+            is_avoid_green if not is_include_weather else is_rainy
         )
 
         if not coords:
