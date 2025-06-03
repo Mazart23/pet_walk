@@ -252,10 +252,9 @@ def algorithm(
             for i in range(len(path) - 1):
                 real_distance += G[path[i]][path[i+1]][0]['length']
             
-            graph_for_return = G_modified if len(blocked_nodes) > 0 else G
             for i in range(len(return_path) - 1):
-                if graph_for_return.has_edge(return_path[i], return_path[i+1]):
-                    real_distance += graph_for_return[return_path[i]][return_path[i+1]][0]['length']
+                if G.has_edge(return_path[i], return_path[i+1]):
+                    real_distance += G[return_path[i]][return_path[i+1]][0]['length']
             
             return route_coords, int(real_distance)
 
