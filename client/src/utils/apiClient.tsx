@@ -16,8 +16,10 @@ apiClient.interceptors.response.use(
       error.config &&
       !error.config.url.includes("/user/login")
     ) {
-      return Promise.reject(error);
+      Cookies.remove("token");
+      window.location.href = "/about";
     }
+    return Promise.reject(error);
   }
 );
 
