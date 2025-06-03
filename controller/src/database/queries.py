@@ -200,7 +200,7 @@ class Queries(PostgresConnect):
                 ST_GeomFromText(%s, 4326)
             WHERE (
                 SELECT COUNT(*) FROM routes WHERE user_id = %s
-            ) < 5
+            ) < 10
             RETURNING id, timestamp;
         """
         rows = self.execute_query(

@@ -9,15 +9,7 @@ import { Trees, Minus, X, CloudSun, Route, Loader2, MapPin, IceCream } from "luc
 import L from "leaflet"
 import Lottie from "react-lottie";
 import dogAnimation from "@/static/animations/dog.json";
-
-// Mock GoodLood ice cream shop locations
-const goodLoodLocationsMock = [
-  { name: "GoodLood Centrum", lat: 50.0614, lng: 19.9365, address: "Rynek Główny 1" },
-  { name: "GoodLood Kazimierz", lat: 50.052, lng: 19.945, address: "ul. Szeroka 15" },
-  { name: "GoodLood Podgórze", lat: 50.047, lng: 19.952, address: "ul. Kalwaryjska 26" },
-  { name: "GoodLood Nowa Huta", lat: 50.077, lng: 19.969, address: "os. Centrum E 1" },
-  { name: "GoodLood Bronowice", lat: 50.085, lng: 19.918, address: "ul. Bronowicka 23" },
-]
+import { goodLoodLocationsMock } from './goodLoodLocations';
 
 export default function RouteConfig() {
   const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
@@ -82,7 +74,7 @@ export default function RouteConfig() {
         if (response === false) {
           toast.error("Service with routes is temporarily unavailable. Please try again later.");
         } else if (response?.error === "rate_limit_exceeded") {
-          toast.info(`Please wait ${token ? '1 minute' : '5 minutes'} between route generations.`);
+          toast.info(`Please wait ${token ? '15 seconds' : '2 minutes'} between route generations.`);
         } else {
           setCurrentRoute(response);
           toast.success("Route generated successfully!");
@@ -281,7 +273,7 @@ export default function RouteConfig() {
           
            <button
               onClick={handleGenerateRoute}
-              disabled={isLoading || !isRoutesLoaded || !(routesLength < 5)}
+              disabled={isLoading || !isRoutesLoaded || !(routesLength < 10)}
               className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 
                        text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 
                        hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed 
@@ -292,7 +284,7 @@ export default function RouteConfig() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Generating Route...
                 </>
-              ) : isRoutesLoaded ? (routesLength < 5) ? (
+              ) : isRoutesLoaded ? (routesLength < 10) ? (
                 <>
                   <Route className="w-5 h-5" />
                   Generate Route
