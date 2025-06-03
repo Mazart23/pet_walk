@@ -41,7 +41,6 @@ def add_green_weights_to_graph(graph):
             tags={
                 'leisure': ['park', 'garden', 'nature_reserve', 'recreation_ground'],
                 'landuse': ['forest', 'grass', 'meadow', 'recreation_ground'],
-                'natural': ['wood', 'scrub', 'grassland', 'heath']
             }
         )
         
