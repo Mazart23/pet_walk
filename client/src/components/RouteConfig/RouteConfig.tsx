@@ -9,15 +9,7 @@ import { Trees, Minus, X, CloudSun, Route, Loader2, MapPin, IceCream } from "luc
 import L from "leaflet"
 import Lottie from "react-lottie";
 import dogAnimation from "@/static/animations/dog.json";
-
-// Mock GoodLood ice cream shop locations
-const goodLoodLocationsMock = [
-  { name: "GoodLood Centrum", lat: 50.0614, lng: 19.9365, address: "Rynek Główny 1" },
-  { name: "GoodLood Kazimierz", lat: 50.052, lng: 19.945, address: "ul. Szeroka 15" },
-  { name: "GoodLood Podgórze", lat: 50.047, lng: 19.952, address: "ul. Kalwaryjska 26" },
-  { name: "GoodLood Nowa Huta", lat: 50.077, lng: 19.969, address: "os. Centrum E 1" },
-  { name: "GoodLood Bronowice", lat: 50.085, lng: 19.918, address: "ul. Bronowicka 23" },
-]
+import { goodLoodLocationsMock } from './goodLoodLocations';
 
 export default function RouteConfig() {
   const [isErrorDisplayed, setIsErrorDisplayed] = useState(false);
