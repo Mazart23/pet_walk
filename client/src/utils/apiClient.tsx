@@ -10,11 +10,14 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      Cookies.remove("token");
-      window.location.href = "/about";
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.config &&
+      !error.config.url.includes("/user/login")
+    ) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
   }
 );
 
